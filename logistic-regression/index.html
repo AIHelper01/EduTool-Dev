@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>逻辑回归互动演示</title>
+  <style>
+    :root {
+      --ink: #202124;
+      --muted: #5f6368;
+      --line: #dadce0;
+      --surface: #f8f9fa;
+      --purple: #9334e6;
+      --purple-dark: #681da8;
+      --orange: #f9ab00;
+      --orange-dark: #b06000;
+      --blue: #1967d2;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #fff; color: var(--ink); font: 16px/1.5 Arial, "Microsoft YaHei", sans-serif; }
+    main { max-width: 1120px; margin: 0 auto; padding: 28px 18px 38px; }
+    h1 { margin: 0 0 6px; font-size: 25px; line-height: 1.3; font-weight: 500; }
+    .intro { margin: 0 0 22px; color: var(--muted); }
+    .formula { color: var(--purple-dark); font-family: Consolas, "Roboto Mono", monospace; white-space: nowrap; }
+    .demo { border: 1px solid var(--line); border-radius: 9px; background: #fafbff; padding: 24px; }
+    .controls { display: grid; grid-template-columns: minmax(160px, 1.1fr) repeat(3, minmax(170px, 1fr)); gap: 22px; align-items: end; }
+    .control { min-width: 0; }
+    .control-head { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 7px; color: var(--muted); }
+    .control output { color: var(--ink); font-family: Consolas, "Roboto Mono", monospace; font-variant-numeric: tabular-nums; }
+    select { width: 100%; height: 45px; padding: 0 14px; border: 1px solid #777b81; border-radius: 4px; color: var(--ink); background: #fff; font: inherit; }
+    input[type="range"] { width: 100%; margin: 9px 0 3px; accent-color: #6750a4; cursor: pointer; }
+    .range-ends { display: flex; justify-content: space-between; color: var(--muted); font: 12px Consolas, monospace; }
+    .toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 18px 0 16px; }
+    button { min-height: 36px; padding: 6px 13px; border-radius: 5px; border: 1px solid #bbb5c6; background: #fff; color: #4e3282; font: inherit; cursor: pointer; }
+    button:hover { background: #f0e7fb; }
+    button.primary { border-color: var(--purple); background: var(--purple); color: #fff; }
+    button.primary:hover { background: var(--purple-dark); }
+    button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid #aecbfa; outline-offset: 2px; }
+    .training-note { color: var(--muted); font-size: 13px; }
+    .plot-card, .stat-card { background: #fff; border-radius: 8px; border: 1px solid #e3e5e8; box-shadow: 0 2px 6px #20212415; }
+    .plot-card { padding: 16px 18px 12px; }
+    .plot-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+    h2 { margin: 0; color: #3c4043; font-size: 18px; font-weight: 400; }
+    .decision { color: var(--muted); font-size: 14px; }
+    .decision strong { color: var(--purple-dark); font-family: Consolas, monospace; font-weight: 600; }
+    .plot-scroll { overflow-x: auto; }
+    svg { display: block; width: 100%; height: auto; min-height: 300px; }
+    .legend { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; color: var(--muted); font-size: 13px; }
+    .chart-hint { display: none; margin: 6px 0 0; color: var(--muted); font-size: 12px; }
+    .swatch { display: inline-block; width: 11px; height: 11px; margin-right: 5px; border-radius: 50%; vertical-align: -1px; }
+    .swatch.positive { background: var(--purple); }
+    .swatch.negative { background: var(--orange); }
+    .swatch.curve { width: 18px; height: 3px; border-radius: 0; background: var(--blue); vertical-align: 3px; }
+    .swatch.threshold { width: 18px; height: 0; border-top: 2px dashed var(--orange-dark); border-radius: 0; vertical-align: 3px; }
+    .bottom { display: grid; grid-template-columns: minmax(340px, 1.1fr) minmax(300px, 1fr); gap: 14px; margin-top: 14px; }
+    .stat-card { padding: 16px 18px 18px; }
+    .stat-card h2 { margin-bottom: 14px; }
+    .matrix { width: 100%; border-collapse: collapse; table-layout: fixed; font-family: Consolas, "Roboto Mono", monospace; text-align: center; }
+    .matrix th, .matrix td { border: 1px solid var(--line); padding: 9px 6px; font-weight: 400; }
+    .matrix thead th:first-child { border: 0; }
+    .matrix th { color: var(--muted); font-size: 12px; }
+    .matrix tbody th { width: 26%; text-align: left; }
+    .matrix td { color: var(--ink); font-size: 17px; font-variant-numeric: tabular-nums; }
+    .matrix td.tp, .matrix td.fp { background: #e9d2fd; }
+    .matrix td.fn, .matrix td.tn { background: #fff2cc; }
+    .matrix td span { display: block; color: var(--muted); font-size: 11px; }
+    .metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 22px; margin: 0; }
+    .metrics div { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; border-bottom: 1px solid #eef0f2; padding: 7px 0; }
+    .metrics dt { color: var(--muted); }
+    .metrics dd { margin: 0; font: 17px Consolas, "Roboto Mono", monospace; font-variant-numeric: tabular-nums; }
+    .explain { margin: 14px 0 0; color: var(--muted); font-size: 13px; }
+    footer { margin-top: 17px; color: var(--muted); font-size: 13px; }
+    @media (max-width: 850px) {
+      .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .bottom { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 540px) {
+      main { padding: 18px 10px 28px; }
+      .demo { padding: 14px; }
+      .controls { grid-template-columns: 1fr; gap: 13px; }
+      .plot-card, .stat-card { padding: 12px; }
+      svg { width: 700px; max-width: none; min-height: 0; }
+      .chart-hint { display: block; }
+      .metrics { grid-template-columns: 1fr; }
+      .matrix th, .matrix td { padding: 7px 2px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; } }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>逻辑回归互动演示</h1>
+    <p class="intro">调整参数，观察 S 形概率曲线如何把输入 <i>x</i> 转成分类结果：<span class="formula">p = 1 / (1 + e<sup>−(wx+b)</sup>)</span></p>
+    <section class="demo" aria-label="逻辑回归演示工具">
+      <div class="controls">
+        <div class="control">
+          <label class="control-head" for="dataset"><span>Dataset（数据集）</span></label>
+          <select id="dataset">
+            <option value="separated">Separated（易区分）</option>
+            <option value="overlap">Unseparated（有重叠）</option>
+            <option value="imbalanced">Imbalanced（不平衡）</option>
+          </select>
+        </div>
+        <div class="control">
+          <label class="control-head" for="weight"><span>Weight（权重）</span><output id="weight-value" for="weight">8.0</output></label>
+          <input id="weight" type="range" min="-16" max="16" step="0.1" value="8" aria-label="权重">
+          <div class="range-ends"><span>−16</span><span>16</span></div>
+        </div>
+        <div class="control">
+          <label class="control-head" for="bias"><span>Bias（偏置）</span><output id="bias-value" for="bias">−4.0</output></label>
+          <input id="bias" type="range" min="-8" max="8" step="0.1" value="-4" aria-label="偏置">
+          <div class="range-ends"><span>−8</span><span>8</span></div>
+        </div>
+        <div class="control">
+          <label class="control-head" for="threshold"><span>Classification threshold（分类阈值）</span><output id="threshold-value" for="threshold">0.50</output></label>
+          <input id="threshold" type="range" min="0.05" max="0.95" step="0.01" value="0.5" aria-label="分类阈值">
+          <div class="range-ends"><span>0.05</span><span>0.95</span></div>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button id="step" type="button">训练一步</button>
+        <button id="auto" type="button" class="primary" aria-pressed="false">自动训练</button>
+        <button id="reset" type="button">重置参数</button>
+        <span class="training-note" id="training-note">训练通过降低交叉熵，更新权重和偏置。</span>
+      </div>
+      <section class="plot-card" aria-label="概率曲线图">
+        <div class="plot-head"><h2>预测概率与实际类别</h2><div class="decision" id="decision" aria-live="polite"></div></div>
+        <div class="plot-scroll" aria-label="可横向滚动的概率曲线图">
+          <svg id="plot" viewBox="0 0 760 370" role="img" aria-label="逻辑回归预测概率曲线和样本点"></svg>
+        </div>
+        <p class="chart-hint">左右滑动图表可查看完整曲线。</p>
+        <div class="legend" aria-hidden="true">
+          <span><i class="swatch positive"></i>实际为正类</span>
+          <span><i class="swatch negative"></i>实际为负类</span>
+          <span><i class="swatch curve"></i>预测概率</span>
+          <span><i class="swatch threshold"></i>分类阈值</span>
+          <span>× 预测错误</span>
+        </div>
+      </section>
+      <div class="bottom">
+        <section class="stat-card" aria-label="混淆矩阵">
+          <h2>Confusion matrix（混淆矩阵）</h2>
+          <table class="matrix">
+            <thead><tr><th></th><th scope="col">实际正类</th><th scope="col">实际负类</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">预测正类</th><td class="tp">● <strong id="tp">0</strong><span>TP</span></td><td class="fp">× <strong id="fp">0</strong><span>FP</span></td></tr>
+              <tr><th scope="row">预测负类</th><td class="fn">× <strong id="fn">0</strong><span>FN</span></td><td class="tn">● <strong id="tn">0</strong><span>TN</span></td></tr>
+            </tbody>
+          </table>
+        </section>
+        <section class="stat-card" aria-label="分类指标">
+          <h2>Metrics（指标）</h2>
+          <dl class="metrics">
+            <div><dt>Accuracy（准确率）</dt><dd id="accuracy">0</dd></div>
+            <div><dt>Precision（精确率）</dt><dd id="precision">0</dd></div>
+            <div><dt>Recall（召回率）</dt><dd id="recall">0</dd></div>
+            <div><dt>F1</dt><dd id="f1">0</dd></div>
+            <div><dt>Log loss（交叉熵）</dt><dd id="loss">0</dd></div>
+            <div><dt>样本数</dt><dd id="sample-count">0</dd></div>
+          </dl>
+          <p class="explain">交叉熵衡量概率预测的质量，不随分类阈值改变；准确率等分类指标会随阈值改变。</p>
+        </section>
+      </div>
+    </section>
+    <footer>工具来源：AIHelper01</footer>
+  </main>
+  <script>
+    'use strict';
+    const $ = id => document.getElementById(id);
+    const controls = { dataset: $('dataset'), weight: $('weight'), bias: $('bias'), threshold: $('threshold') };
+    let timer = null;
+
+    // Fixed seeds keep the teaching examples the same on every visit.
+    function random(seed) {
+      let state = seed >>> 0;
+      return () => {
+        state = (state + 0x6D2B79F5) >>> 0;
+        let n = state;
+        n = Math.imul(n ^ (n >>> 15), n | 1);
+        n ^= n + Math.imul(n ^ (n >>> 7), n | 61);
+        return ((n ^ (n >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+    function sigmoid(z) {
+      return z >= 0 ? 1 / (1 + Math.exp(-z)) : Math.exp(z) / (1 + Math.exp(z));
+    }
+    function makeData(kind, seed) {
+      const rnd = random(seed);
+      return Array.from({ length: 100 }, (_, i) => {
+        const x = (i + 0.5) / 100;
+        const p = kind === 'separated' ? sigmoid((x - 0.5) * 20)
+                : kind === 'overlap' ? sigmoid((x - 0.5) * 5)
+                : 0.42 * sigmoid((x - 0.76) * 13);
+        return { x, y: rnd() < p ? 1 : 0, jitter: rnd() };
+      });
+    }
+    const datasets = {
+      separated: makeData('separated', 1284),
+      overlap: makeData('overlap', 7943),
+      imbalanced: makeData('imbalanced', 2029)
+    };
+    function values() {
+      return { w: Number(controls.weight.value), b: Number(controls.bias.value), t: Number(controls.threshold.value) };
+    }
+    function evaluate(data, w, b, t) {
+      const counts = { tp: 0, fp: 0, fn: 0, tn: 0 };
+      let loss = 0;
+      for (const item of data) {
+        const p = sigmoid(w * item.x + b);
+        const positive = p >= t;
+        counts[positive ? (item.y ? 'tp' : 'fp') : (item.y ? 'fn' : 'tn')]++;
+        const safe = Math.min(1 - 1e-12, Math.max(1e-12, p));
+        loss -= item.y * Math.log(safe) + (1 - item.y) * Math.log(1 - safe);
+      }
+      const precision = counts.tp + counts.fp ? counts.tp / (counts.tp + counts.fp) : null;
+      const recall = counts.tp + counts.fn ? counts.tp / (counts.tp + counts.fn) : null;
+      const f1 = precision !== null && recall !== null && precision + recall
+        ? 2 * precision * recall / (precision + recall) : null;
+      return { counts, accuracy: (counts.tp + counts.tn) / data.length, precision, recall, f1, loss: loss / data.length };
+    }
+    function svgPlot(data, w, b, t) {
+      const left = 51, right = 737, top = 19, bottom = 324;
+      const xpx = x => left + x * (right - left);
+      const ypx = y => bottom - y * (bottom - top);
+      let parts = ['<rect x="51" y="19" width="686" height="305" fill="#fff"/>'];
+      for (let i = 0; i <= 10; i++) {
+        const x = xpx(i / 10), y = ypx(i / 10);
+        parts.push(`<line x1="${x}" y1="${top}" x2="${x}" y2="${bottom}" stroke="#e8eaed"/>`);
+        parts.push(`<line x1="${left}" y1="${y}" x2="${right}" y2="${y}" stroke="#e8eaed"/>`);
+        if (i % 2 === 0) {
+          parts.push(`<text x="${x}" y="344" text-anchor="middle" font-size="11" fill="#5f6368">${(i / 10).toFixed(1)}</text>`);
+          parts.push(`<text x="39" y="${y + 4}" text-anchor="end" font-size="11" fill="#5f6368">${(i / 10).toFixed(1)}</text>`);
+        }
+      }
+      parts.push(`<line x1="${left}" y1="${ypx(t)}" x2="${right}" y2="${ypx(t)}" stroke="#b06000" stroke-width="2" stroke-dasharray="6 5"/>`);
+      const logit = Math.log(t / (1 - t));
+      const boundary = Math.abs(w) > 1e-9 ? (logit - b) / w : null;
+      if (boundary !== null && boundary >= 0 && boundary <= 1) {
+        const x = xpx(boundary);
+        parts.push(`<line x1="${x}" y1="${top}" x2="${x}" y2="${bottom}" stroke="#9334e6" stroke-width="2" opacity=".7"/>`);
+      }
+      const curve = Array.from({ length: 201 }, (_, i) => `${i ? 'L' : 'M'} ${xpx(i / 200).toFixed(2)} ${ypx(sigmoid(w * i / 200 + b)).toFixed(2)}`).join(' ');
+      parts.push(`<path d="${curve}" fill="none" stroke="#1967d2" stroke-width="3" stroke-linecap="round"/>`);
+      for (const item of data) {
+        const predicted = sigmoid(w * item.x + b) >= t ? 1 : 0;
+        const x = xpx(item.x), y = ypx(item.y ? 0.955 - item.jitter * 0.045 : 0.045 + item.jitter * 0.045);
+        parts.push(`<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="4.3" fill="${item.y ? '#9334e6' : '#f9ab00'}" stroke="#fff" stroke-width="1.2"><title>x=${item.x.toFixed(2)}，实际${item.y ? '正类' : '负类'}，预测概率${sigmoid(w * item.x + b).toFixed(2)}</title></circle>`);
+        if (predicted !== item.y) {
+          parts.push(`<path d="M${(x - 2.2).toFixed(2)} ${(y - 2.2).toFixed(2)}L${(x + 2.2).toFixed(2)} ${(y + 2.2).toFixed(2)}M${(x + 2.2).toFixed(2)} ${(y - 2.2).toFixed(2)}L${(x - 2.2).toFixed(2)} ${(y + 2.2).toFixed(2)}" stroke="#202124" stroke-width="1"/>`);
+        }
+      }
+      parts.push('<text x="394" y="364" text-anchor="middle" font-size="13" fill="#5f6368">输入特征 x</text>');
+      $('plot').innerHTML = parts.join('');
+      $('decision').innerHTML = boundary !== null && boundary >= 0 && boundary <= 1
+        ? `分类边界 x = <strong>${boundary.toFixed(2)}</strong>` : '分类边界在图表范围之外';
+    }
+    function number(value) { return value === null ? '—' : value.toFixed(2); }
+    function render() {
+      const { w, b, t } = values();
+      const data = datasets[controls.dataset.value];
+      const result = evaluate(data, w, b, t);
+      $('weight-value').textContent = w.toFixed(1);
+      $('bias-value').textContent = b.toFixed(1);
+      $('threshold-value').textContent = t.toFixed(2);
+      for (const key of ['tp', 'fp', 'fn', 'tn']) $(key).textContent = result.counts[key];
+      for (const key of ['accuracy', 'precision', 'recall', 'f1', 'loss']) $(key).textContent = number(result[key]);
+      $('sample-count').textContent = data.length;
+      svgPlot(data, w, b, t);
+    }
+    function stopTraining() {
+      if (timer !== null) clearInterval(timer);
+      timer = null;
+      $('auto').textContent = '自动训练';
+      $('auto').setAttribute('aria-pressed', 'false');
+    }
+    function trainStep() {
+      const data = datasets[controls.dataset.value];
+      const { w, b } = values();
+      let dw = 0, db = 0;
+      for (const item of data) {
+        const error = sigmoid(w * item.x + b) - item.y;
+        dw += error * item.x;
+        db += error;
+      }
+      const rate = 4;
+      controls.weight.value = Math.max(-16, Math.min(16, w - rate * dw / data.length));
+      controls.bias.value = Math.max(-8, Math.min(8, b - rate * db / data.length));
+      render();
+    }
+    for (const control of Object.values(controls)) control.addEventListener('input', render);
+    controls.dataset.addEventListener('change', () => { stopTraining(); render(); });
+    $('step').addEventListener('click', trainStep);
+    $('auto').addEventListener('click', () => {
+      if (timer !== null) return stopTraining();
+      timer = setInterval(trainStep, 120);
+      $('auto').textContent = '暂停训练';
+      $('auto').setAttribute('aria-pressed', 'true');
+    });
+    $('reset').addEventListener('click', () => {
+      stopTraining();
+      controls.weight.value = 8;
+      controls.bias.value = -4;
+      controls.threshold.value = 0.5;
+      render();
+    });
+    render();
+  </script>
+</body>
+</html>
