@@ -4,6 +4,9 @@
 
 仓库包含可安装的 Codex skill [`w-interactive-demo`](skills/w-interactive-demo/SKILL.md)，以及三个完整案例。默认成品是双击即可运行的 `index.html`，不要求学习者安装框架、启动服务器或联网。
 
+双击仓库根目录的 [`index.html`](index.html) 可以打开工具主页，并从卡片进入现有案例。
+这个入口不依赖构建步骤，也可以直接从仓库根目录发布到 GitHub Pages。
+
 ## 能做什么
 
 ### 1. 提取网页中的指定演示
@@ -53,6 +56,7 @@ Copy-Item -Recurse -Force ".\skills\w-interactive-demo" (Join-Path $codexRoot "s
 
 ```text
 EduTool-Dev/
+├─ index.html                   # 简洁的工具主页
 ├─ skills/
 │  └─ w-interactive-demo/       # 可安装的 skill
 │     ├─ SKILL.md               # 路由、默认约定和完成标准

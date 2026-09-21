@@ -18,6 +18,7 @@ class ResourceParser(HTMLParser):
     def __init__(self) -> None:
         super().__init__()
         self.external: list[str] = []
+        self.local_links: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         values = dict(attrs)
@@ -29,6 +30,10 @@ class ResourceParser(HTMLParser):
         for value in candidates:
             if value and re.match(r"^https?://", value, flags=re.IGNORECASE):
                 self.external.append(value)
+        if tag == "a":
+            href = values.get("href")
+            if href and not re.match(r"^(?:https?://|mailto:|#)", href, flags=re.IGNORECASE):
+                self.local_links.append(href)
 
 
 def main() -> int:
@@ -47,6 +52,19 @@ def main() -> int:
     for path in required_skill_files:
         if not path.is_file():
             fail(f"Missing skill file: {path.relative_to(ROOT)}")
+
+    homepage = ROOT / "index.html"
+    if not homepage.is_file():
+        fail("Missing homepage: index.html")
+    else:
+        parser = ResourceParser()
+        parser.feed(homepage.read_text(encoding="utf-8"))
+        for url in parser.external:
+            fail(f"External runtime resource in index.html: {url}")
+        for target in parser.local_links:
+            clean_target = target.split("#", 1)[0]
+            if clean_target and not (ROOT / clean_target).exists():
+                fail(f"Broken homepage link: {target}")
 
     skill_md = SKILL / "SKILL.md"
     if skill_md.is_file():

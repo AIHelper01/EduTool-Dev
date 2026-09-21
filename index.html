@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="EduTool 互动教学工具示例主页">
+  <title>EduTool · 互动教学工具</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #202124;
+      --muted: #5f6368;
+      --line: #dadce0;
+      --surface: #f8f9fa;
+      --purple: #9334e6;
+      --purple-dark: #681da8;
+      --purple-soft: #f3e8fd;
+      --orange: #f9ab00;
+      --orange-soft: #fff1c7;
+      --blue: #1967d2;
+      --blue-soft: #e8f0fe;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #fff;
+      color: var(--ink);
+      font-family: Arial, "Microsoft YaHei", sans-serif;
+      line-height: 1.6;
+    }
+
+    a { color: inherit; }
+
+    .site-header {
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, .94);
+    }
+
+    .nav,
+    main,
+    .site-footer {
+      width: min(1080px, calc(100% - 36px));
+      margin-inline: auto;
+    }
+
+    .nav {
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: #28203b;
+      text-decoration: none;
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+    }
+
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      background: var(--purple);
+      color: #fff;
+      font-family: Consolas, monospace;
+      font-size: 15px;
+      box-shadow: 7px 7px 0 var(--orange-soft);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      font-size: 14px;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .nav-links a:hover { color: var(--purple-dark); }
+
+    main { padding: 76px 0 84px; }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+      align-items: center;
+      gap: 64px;
+      margin-bottom: 74px;
+    }
+
+    .eyebrow {
+      margin: 0 0 13px;
+      color: var(--purple-dark);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 690px;
+      margin: 0;
+      font-size: clamp(38px, 6vw, 66px);
+      line-height: 1.08;
+      letter-spacing: -.055em;
+      font-weight: 750;
+    }
+
+    .hero-copy {
+      max-width: 620px;
+      margin: 24px 0 0;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .button {
+      min-height: 43px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 17px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--purple-dark);
+      text-decoration: none;
+      font-weight: 650;
+      font-size: 14px;
+    }
+
+    .button.primary {
+      border-color: var(--purple);
+      background: var(--purple);
+      color: #fff;
+    }
+
+    .button:hover { background: var(--purple-soft); }
+    .button.primary:hover { background: var(--purple-dark); }
+
+    .concept-card {
+      position: relative;
+      min-height: 280px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--surface);
+      box-shadow: 0 18px 45px rgba(60, 64, 67, .12);
+    }
+
+    .concept-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(#e8eaed 1px, transparent 1px), linear-gradient(90deg, #e8eaed 1px, transparent 1px);
+      background-size: 42px 42px;
+      opacity: .62;
+    }
+
+    .concept-card svg {
+      position: absolute;
+      inset: 21px;
+      width: calc(100% - 42px);
+      height: calc(100% - 42px);
+    }
+
+    .concept-label {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      z-index: 1;
+      padding: 5px 9px;
+      border-radius: 5px;
+      background: #fff;
+      color: var(--muted);
+      font: 12px Consolas, "Microsoft YaHei", monospace;
+      box-shadow: 0 1px 3px rgba(60, 64, 67, .18);
+    }
+
+    .tools-heading {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 22px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.25;
+      letter-spacing: -.03em;
+    }
+
+    .tools-heading p {
+      max-width: 440px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      text-align: right;
+    }
+
+    .tool-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .tool-card {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 3px 9px rgba(60, 64, 67, .08);
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+    .tool-card:hover {
+      transform: translateY(-3px);
+      border-color: #c4a7e7;
+      box-shadow: 0 12px 25px rgba(60, 64, 67, .13);
+    }
+
+    .preview {
+      height: 170px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    .preview svg { width: 100%; height: 100%; display: block; }
+
+    .tool-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+    }
+
+    .kind {
+      margin-bottom: 8px;
+      color: var(--purple-dark);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 19px;
+      line-height: 1.35;
+    }
+
+    .tool-body p {
+      margin: 10px 0 21px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .open-tool {
+      width: fit-content;
+      margin-top: auto;
+      color: var(--blue);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .open-tool::after { content: "  →"; }
+    .open-tool:hover { text-decoration: underline; }
+
+    .note {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 28px;
+      padding: 15px 18px;
+      border: 1px solid #d2e3fc;
+      border-radius: 8px;
+      background: var(--blue-soft);
+      color: #3c4043;
+      font-size: 13px;
+    }
+
+    .note code { font-family: Consolas, monospace; color: #174ea6; }
+
+    .site-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 24px 0 34px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .site-footer a { color: var(--blue); text-decoration: none; }
+
+    :focus-visible {
+      outline: 3px solid #aecbfa;
+      outline-offset: 3px;
+    }
+
+    @media (max-width: 820px) {
+      main { padding-top: 52px; }
+      .hero { grid-template-columns: 1fr; gap: 35px; margin-bottom: 60px; }
+      .concept-card { min-height: 230px; }
+      .tool-grid { grid-template-columns: 1fr; }
+      .tool-card { display: grid; grid-template-columns: 230px 1fr; }
+      .preview { height: auto; min-height: 190px; border-right: 1px solid var(--line); border-bottom: 0; }
+    }
+
+    @media (max-width: 560px) {
+      .nav,
+      main,
+      .site-footer { width: min(100% - 24px, 1080px); }
+      .nav { min-height: 58px; }
+      .nav-links a:first-child { display: none; }
+      main { padding: 42px 0 60px; }
+      h1 { font-size: 41px; }
+      .hero-copy { font-size: 15px; }
+      .concept-card { min-height: 210px; }
+      .tools-heading { display: block; }
+      .tools-heading p { margin-top: 8px; text-align: left; }
+      .tool-card { display: flex; }
+      .preview { height: 170px; min-height: 0; border-right: 0; border-bottom: 1px solid var(--line); }
+      .site-footer { display: block; }
+      .site-footer span { display: block; margin-top: 4px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tool-card { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav" aria-label="主导航">
+      <a class="brand" href="./index.html"><span class="brand-mark">f(x)</span><span>EduTool</span></a>
+      <div class="nav-links">
+        <a href="#tools">互动演示</a>
+        <a href="./README.md">项目说明</a>
+        <a href="https://github.com/AIHelper01/EduTool-Dev">GitHub</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">Interactive learning lab</p>
+        <h1 id="page-title">把抽象概念，变成可以拖动的图。</h1>
+        <p class="hero-copy">这里收集轻量、可离线运行的教学演示。调节参数，立即观察曲线、分类结果和指标如何变化。</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#tools">查看演示</a>
+          <a class="button" href="./skills/w-interactive-demo/SKILL.md">了解制作 skill</a>
+        </div>
+      </div>
+      <div class="concept-card" aria-hidden="true">
+        <span class="concept-label">参数 → 图形 → 理解</span>
+        <svg viewBox="0 0 360 250">
+          <path d="M18 218 C95 218 103 205 150 171 C196 138 205 32 337 24" fill="none" stroke="#1967d2" stroke-width="6" stroke-linecap="round"/>
+          <line x1="18" y1="124" x2="337" y2="124" stroke="#b06000" stroke-width="2" stroke-dasharray="8 7"/>
+          <line x1="181" y1="24" x2="181" y2="218" stroke="#9334e6" stroke-width="3" opacity=".7"/>
+          <g fill="#f9ab00" stroke="#fff" stroke-width="2">
+            <circle cx="36" cy="213" r="7"/><circle cx="67" cy="207" r="7"/><circle cx="101" cy="214" r="7"/><circle cx="133" cy="202" r="7"/><circle cx="159" cy="210" r="7"/>
+          </g>
+          <g fill="#9334e6" stroke="#fff" stroke-width="2">
+            <circle cx="203" cy="47" r="7"/><circle cx="231" cy="35" r="7"/><circle cx="267" cy="44" r="7"/><circle cx="302" cy="30" r="7"/><circle cx="330" cy="36" r="7"/>
+          </g>
+        </svg>
+      </div>
+    </section>
+
+    <section id="tools" aria-labelledby="tools-title">
+      <div class="tools-heading">
+        <h2 id="tools-title">现有工具</h2>
+        <p>无需安装依赖。进入工具后，直接拖动控件即可开始探索。</p>
+      </div>
+
+      <div class="tool-grid">
+        <article class="tool-card">
+          <div class="preview" aria-hidden="true">
+            <svg viewBox="0 0 340 170">
+              <g stroke="#e1e4e8"><line x1="32" y1="24" x2="32" y2="143"/><line x1="32" y1="143" x2="316" y2="143"/><line x1="32" y1="103" x2="316" y2="103"/><line x1="32" y1="63" x2="316" y2="63"/></g>
+              <g fill="#669df6"><circle cx="68" cy="63" r="5"/><circle cx="92" cy="74" r="5"/><circle cx="124" cy="81" r="5"/><circle cx="159" cy="96" r="5"/><circle cx="197" cy="100" r="5"/><circle cx="235" cy="118" r="5"/><circle cx="276" cy="123" r="5"/></g>
+              <path d="M40 54 L305 132" stroke="#1967d2" stroke-width="4"/>
+              <g stroke="#e37400" stroke-width="2"><line x1="68" y1="63" x2="68" y2="62"/><line x1="124" y1="81" x2="124" y2="79"/><line x1="197" y1="100" x2="197" y2="100"/><line x1="235" y1="118" x2="235" y2="111"/></g>
+            </svg>
+          </div>
+          <div class="tool-body">
+            <span class="kind">网页提取案例</span>
+            <h3>线性回归参数练习</h3>
+            <p>调整权重和偏置，观察拟合直线与损失值同步变化。</p>
+            <a class="open-tool" href="./examples/linear-regression/index.html">打开工具</a>
+          </div>
+        </article>
+
+        <article class="tool-card">
+          <div class="preview" aria-hidden="true">
+            <svg viewBox="0 0 340 170">
+              <rect x="28" y="28" width="142" height="114" fill="#fff1c7"/><rect x="170" y="28" width="142" height="114" fill="#e9d2fd"/>
+              <line x1="170" y1="20" x2="170" y2="148" stroke="#202124" stroke-width="4"/>
+              <g fill="#f9ab00"><circle cx="48" cy="128" r="6"/><circle cx="70" cy="116" r="6"/><circle cx="91" cy="128" r="6"/><circle cx="113" cy="105" r="6"/><circle cx="137" cy="125" r="6"/><circle cx="158" cy="112" r="6"/></g>
+              <g fill="#9334e6"><rect x="185" y="119" width="11" height="11" rx="2"/><rect x="211" y="96" width="11" height="11" rx="2"/><rect x="237" y="119" width="11" height="11" rx="2"/><rect x="262" y="84" width="11" height="11" rx="2"/><rect x="288" y="108" width="11" height="11" rx="2"/></g>
+              <circle cx="170" cy="67" r="13" fill="#fff" fill-opacity=".75" stroke="#202124" stroke-width="3"/>
+            </svg>
+          </div>
+          <div class="tool-body">
+            <span class="kind">网页提取案例</span>
+            <h3>分类指标与混淆矩阵</h3>
+            <p>移动分类阈值，对比准确率、精确率和召回率。</p>
+            <a class="open-tool" href="./examples/classification-accuracy-precision-recall/index.html">打开工具</a>
+          </div>
+        </article>
+
+        <article class="tool-card">
+          <div class="preview" aria-hidden="true">
+            <svg viewBox="0 0 340 170">
+              <g stroke="#e1e4e8"><line x1="32" y1="24" x2="32" y2="143"/><line x1="32" y1="143" x2="316" y2="143"/><line x1="32" y1="84" x2="316" y2="84" stroke-dasharray="5 5"/></g>
+              <path d="M38 137 C115 136 133 120 168 84 C204 47 228 31 309 29" fill="none" stroke="#1967d2" stroke-width="4"/>
+              <line x1="168" y1="24" x2="168" y2="143" stroke="#9334e6" stroke-width="3" opacity=".65"/>
+              <g fill="#f9ab00"><circle cx="58" cy="135" r="5"/><circle cx="85" cy="130" r="5"/><circle cx="112" cy="136" r="5"/><circle cx="145" cy="128" r="5"/></g>
+              <g fill="#9334e6"><circle cx="203" cy="38" r="5"/><circle cx="232" cy="31" r="5"/><circle cx="264" cy="39" r="5"/><circle cx="297" cy="28" r="5"/></g>
+            </svg>
+          </div>
+          <div class="tool-body">
+            <span class="kind">新建工具案例</span>
+            <h3>逻辑回归互动演示</h3>
+            <p>探索 Sigmoid 概率曲线、分类边界和梯度训练。</p>
+            <a class="open-tool" href="./examples/logistic-regression/index.html">打开工具</a>
+          </div>
+        </article>
+      </div>
+
+      <div class="note"><span aria-hidden="true">◎</span><span>这些案例也用于验证 <code>w-interactive-demo</code> skill 的提取与生成流程。</span></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>EduTool · 互动教学工具示例</span>
+    <span>工具来源：AIHelper01 · <a href="./THIRD_PARTY_NOTICES.md">第三方说明</a></span>
+  </footer>
+</body>
+</html>
