@@ -219,6 +219,87 @@
       text-align: right;
     }
 
+    .category-nav {
+      display: flex;
+      gap: 9px;
+      overflow-x: auto;
+      margin: 0 0 34px;
+      padding: 2px 2px 8px;
+      scrollbar-width: thin;
+    }
+
+    .category-nav a {
+      flex: 0 0 auto;
+      padding: 7px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+    }
+
+    .category-nav a:first-child {
+      border-color: #d5b5f4;
+      background: var(--purple-soft);
+      color: var(--purple-dark);
+      font-weight: 700;
+    }
+
+    .category-nav a:hover {
+      border-color: #c4a7e7;
+      color: var(--purple-dark);
+    }
+
+    .category-section {
+      scroll-margin-top: 24px;
+    }
+
+    .category-section + .category-section {
+      margin-top: 50px;
+      padding-top: 42px;
+      border-top: 1px solid var(--line);
+    }
+
+    .category-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 22px;
+      margin-bottom: 18px;
+    }
+
+    .category-title {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .category-symbol {
+      min-width: 45px;
+      height: 29px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 7px;
+      background: var(--purple);
+      color: #fff;
+      font: 700 12px Consolas, monospace;
+      letter-spacing: -.02em;
+      box-shadow: 4px 4px 0 var(--purple-soft);
+    }
+
+    .category-heading h3 {
+      font-size: 20px;
+    }
+
+    .category-heading p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: right;
+    }
+
     .tool-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -290,6 +371,60 @@
     .open-tool::after { content: "  →"; }
     .open-tool:hover { text-decoration: underline; }
 
+    .planned {
+      display: grid;
+      grid-template-columns: minmax(190px, .8fr) minmax(0, 2.2fr);
+      align-items: center;
+      gap: 28px;
+      min-height: 116px;
+      padding: 23px 25px;
+      border: 1px dashed #c8cbd0;
+      border-radius: 10px;
+      background: var(--surface);
+    }
+
+    .planned strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 15px;
+    }
+
+    .planned p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .topic-list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .topic {
+      min-width: 0;
+      padding: 12px 14px;
+      border: 1px solid #e3e5e8;
+      border-radius: 7px;
+      background: #fff;
+      color: #4a4d52;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .topic::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      display: inline-block;
+      margin-right: 8px;
+      border: 2px solid #b78adb;
+      border-radius: 50%;
+      vertical-align: 0;
+    }
+
     .note {
       display: flex;
       align-items: center;
@@ -329,6 +464,7 @@
       .tool-grid { grid-template-columns: 1fr; }
       .tool-card { display: grid; grid-template-columns: 230px 1fr; }
       .preview { height: auto; min-height: 190px; border-right: 1px solid var(--line); border-bottom: 0; }
+      .planned { grid-template-columns: 1fr; gap: 16px; }
     }
 
     @media (max-width: 560px) {
@@ -343,8 +479,14 @@
       .concept-card { min-height: 210px; }
       .tools-heading { display: block; }
       .tools-heading p { margin-top: 8px; text-align: left; }
+      .category-nav { margin-bottom: 27px; }
+      .category-section + .category-section { margin-top: 38px; padding-top: 32px; }
+      .category-heading { align-items: flex-start; }
+      .category-heading p { max-width: 130px; text-align: right; }
       .tool-card { display: flex; }
       .preview { height: 170px; min-height: 0; border-right: 0; border-bottom: 1px solid var(--line); }
+      .planned { padding: 18px; }
+      .topic-list { grid-template-columns: 1fr; gap: 8px; }
       .site-footer { display: block; }
       .site-footer span { display: block; margin-top: 4px; }
     }
@@ -395,12 +537,26 @@
 
     <section id="tools" aria-labelledby="tools-title">
       <div class="tools-heading">
-        <h2 id="tools-title">现有工具</h2>
-        <p>无需安装依赖。进入工具后，直接拖动控件即可开始探索。</p>
+        <h2 id="tools-title">AI 互动工具</h2>
+        <p>按领域浏览。现有案例可直接打开，规划中的主题会随着案例开发逐步补充。</p>
       </div>
 
-      <div class="tool-grid">
-        <article class="tool-card">
+      <nav class="category-nav" aria-label="工具分类">
+        <a href="#machine-learning">机器学习</a>
+        <a href="#deep-learning">深度学习</a>
+        <a href="#large-language-models">大语言模型</a>
+        <a href="#computer-vision">计算机视觉</a>
+        <a href="#reinforcement-learning">强化学习</a>
+      </nav>
+
+      <section class="category-section" id="machine-learning" aria-labelledby="machine-learning-title">
+        <div class="category-heading">
+          <div class="category-title"><span class="category-symbol">ML</span><h3 id="machine-learning-title">机器学习</h3></div>
+          <p>3 个可用工具</p>
+        </div>
+
+        <div class="tool-grid">
+          <article class="tool-card">
           <div class="preview" aria-hidden="true">
             <svg viewBox="0 0 340 170">
               <g stroke="#e1e4e8"><line x1="32" y1="24" x2="32" y2="143"/><line x1="32" y1="143" x2="316" y2="143"/><line x1="32" y1="103" x2="316" y2="103"/><line x1="32" y1="63" x2="316" y2="63"/></g>
@@ -415,9 +571,9 @@
             <p>调整权重和偏置，观察拟合直线与损失值同步变化。</p>
             <a class="open-tool" href="./examples/linear-regression/index.html">打开工具</a>
           </div>
-        </article>
+          </article>
 
-        <article class="tool-card">
+          <article class="tool-card">
           <div class="preview" aria-hidden="true">
             <svg viewBox="0 0 340 170">
               <rect x="28" y="28" width="142" height="114" fill="#fff1c7"/><rect x="170" y="28" width="142" height="114" fill="#e9d2fd"/>
@@ -433,9 +589,9 @@
             <p>移动分类阈值，对比准确率、精确率和召回率。</p>
             <a class="open-tool" href="./examples/classification-accuracy-precision-recall/index.html">打开工具</a>
           </div>
-        </article>
+          </article>
 
-        <article class="tool-card">
+          <article class="tool-card">
           <div class="preview" aria-hidden="true">
             <svg viewBox="0 0 340 170">
               <g stroke="#e1e4e8"><line x1="32" y1="24" x2="32" y2="143"/><line x1="32" y1="143" x2="316" y2="143"/><line x1="32" y1="84" x2="316" y2="84" stroke-dasharray="5 5"/></g>
@@ -451,8 +607,53 @@
             <p>探索 Sigmoid 概率曲线、分类边界和梯度训练。</p>
             <a class="open-tool" href="./examples/logistic-regression/index.html">打开工具</a>
           </div>
-        </article>
-      </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="category-section" id="deep-learning" aria-labelledby="deep-learning-title">
+        <div class="category-heading">
+          <div class="category-title"><span class="category-symbol">DL</span><h3 id="deep-learning-title">深度学习</h3></div>
+          <p>规划中</p>
+        </div>
+        <div class="planned">
+          <div><strong>下一批演示主题</strong><p>从神经元到模型训练，逐步展示数据如何穿过网络。</p></div>
+          <div class="topic-list" aria-label="深度学习规划主题"><span class="topic">神经网络结构</span><span class="topic">反向传播</span><span class="topic">卷积与特征图</span></div>
+        </div>
+      </section>
+
+      <section class="category-section" id="large-language-models" aria-labelledby="large-language-models-title">
+        <div class="category-heading">
+          <div class="category-title"><span class="category-symbol">LLM</span><h3 id="large-language-models-title">大语言模型</h3></div>
+          <p>规划中</p>
+        </div>
+        <div class="planned">
+          <div><strong>下一批演示主题</strong><p>把模型内部的文本处理过程拆成可观察、可调节的步骤。</p></div>
+          <div class="topic-list" aria-label="大语言模型规划主题"><span class="topic">Token 与上下文</span><span class="topic">注意力机制</span><span class="topic">温度与采样</span></div>
+        </div>
+      </section>
+
+      <section class="category-section" id="computer-vision" aria-labelledby="computer-vision-title">
+        <div class="category-heading">
+          <div class="category-title"><span class="category-symbol">CV</span><h3 id="computer-vision-title">计算机视觉</h3></div>
+          <p>规划中</p>
+        </div>
+        <div class="planned">
+          <div><strong>下一批演示主题</strong><p>观察像素、特征和预测结果之间的联系。</p></div>
+          <div class="topic-list" aria-label="计算机视觉规划主题"><span class="topic">卷积核</span><span class="topic">图像分类</span><span class="topic">目标检测</span></div>
+        </div>
+      </section>
+
+      <section class="category-section" id="reinforcement-learning" aria-labelledby="reinforcement-learning-title">
+        <div class="category-heading">
+          <div class="category-title"><span class="category-symbol">RL</span><h3 id="reinforcement-learning-title">强化学习</h3></div>
+          <p>规划中</p>
+        </div>
+        <div class="planned">
+          <div><strong>下一批演示主题</strong><p>展示智能体如何通过行动、奖励和反馈更新策略。</p></div>
+          <div class="topic-list" aria-label="强化学习规划主题"><span class="topic">探索与利用</span><span class="topic">价值函数</span><span class="topic">策略更新</span></div>
+        </div>
+      </section>
 
       <div class="note"><span aria-hidden="true">◎</span><span>这些案例也用于验证 <code>w-interactive-demo</code> skill 的提取与生成流程。</span></div>
     </section>
