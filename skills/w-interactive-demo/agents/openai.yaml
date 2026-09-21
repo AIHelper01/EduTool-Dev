@@ -1,0 +1,4 @@
+interface:
+  display_name: "离线交互演示工具"
+  short_description: "从网页提取指定交互演示，或按统一浅色教学风格创建可离线使用的新工具"
+  default_prompt: "请使用 $w-interactive-demo，根据我提供的网页链接或教学主题，制作可本地离线使用的交互演示工具。"
