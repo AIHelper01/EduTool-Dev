@@ -371,6 +371,27 @@
     .open-tool::after { content: "  →"; }
     .open-tool:hover { text-decoration: underline; }
 
+    .online-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      width: fit-content;
+      margin-bottom: 8px;
+      color: #137333;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .06em;
+    }
+
+    .online-badge::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #34a853;
+      box-shadow: 0 0 0 3px #e6f4ea;
+    }
+
     .planned {
       display: grid;
       grid-template-columns: minmax(190px, .8fr) minmax(0, 2.2fr);
@@ -542,12 +563,46 @@
       </div>
 
       <nav class="category-nav" aria-label="工具分类">
+        <a href="#data-tools">数据工具</a>
         <a href="#machine-learning">机器学习</a>
         <a href="#deep-learning">深度学习</a>
         <a href="#large-language-models">大语言模型</a>
         <a href="#computer-vision">计算机视觉</a>
         <a href="#reinforcement-learning">强化学习</a>
       </nav>
+
+      <section class="category-section" id="data-tools" aria-labelledby="data-tools-title">
+        <div class="category-heading">
+          <div class="category-title"><span class="category-symbol">DATA</span><h3 id="data-tools-title">数据工具</h3></div>
+          <p>1 个在线工具</p>
+        </div>
+
+        <div class="tool-grid">
+          <article class="tool-card">
+            <div class="preview" aria-hidden="true">
+              <svg viewBox="0 0 340 170">
+                <g stroke="#e1e4e8" stroke-width="1">
+                  <line x1="31" y1="25" x2="31" y2="145"/><line x1="79" y1="25" x2="79" y2="145"/><line x1="127" y1="25" x2="127" y2="145"/><line x1="175" y1="25" x2="175" y2="145"/><line x1="223" y1="25" x2="223" y2="145"/><line x1="271" y1="25" x2="271" y2="145"/><line x1="319" y1="25" x2="319" y2="145"/>
+                  <line x1="31" y1="25" x2="319" y2="25"/><line x1="31" y1="65" x2="319" y2="65"/><line x1="31" y1="105" x2="319" y2="105"/><line x1="31" y1="145" x2="319" y2="145"/>
+                </g>
+                <line x1="31" y1="105" x2="319" y2="105" stroke="#5f6368" stroke-width="1.5"/>
+                <line x1="175" y1="25" x2="175" y2="145" stroke="#5f6368" stroke-width="1.5"/>
+                <path d="M48 35 C88 129 126 137 175 105 C223 73 259 63 305 49" fill="none" stroke="#6557d2" stroke-width="4" stroke-linecap="round"/>
+                <circle cx="175" cy="105" r="5" fill="#6557d2" stroke="#fff" stroke-width="2"/>
+                <circle cx="271" cy="59" r="5" fill="#f9ab00" stroke="#fff" stroke-width="2"/>
+                <rect x="43" y="39" width="64" height="27" rx="5" fill="#fff" stroke="#dadce0"/>
+                <text x="55" y="57" fill="#5f6368" font-size="12" font-family="Consolas, monospace">f(x)=x²</text>
+              </svg>
+            </div>
+            <div class="tool-body">
+              <span class="online-badge">在线工具</span>
+              <h3>GeoGebra 图形计算器</h3>
+              <p>绘制函数、输入方程，并在坐标系中探索代数与几何关系。</p>
+              <a class="open-tool" href="https://www.geogebra.org/calculator" target="_blank" rel="noopener noreferrer">访问 GeoGebra</a>
+            </div>
+          </article>
+        </div>
+      </section>
 
       <section class="category-section" id="machine-learning" aria-labelledby="machine-learning-title">
         <div class="category-heading">
