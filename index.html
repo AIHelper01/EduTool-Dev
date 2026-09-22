@@ -306,6 +306,8 @@
       gap: 18px;
     }
 
+    .tool-grid + .planned { margin-top: 18px; }
+
     .tool-card {
       min-width: 0;
       display: flex;
@@ -493,9 +495,10 @@
       main,
       .site-footer { width: min(100% - 24px, 1080px); }
       .nav { min-height: 58px; }
-      .nav-links a:first-child { display: none; }
+      .nav-links a:first-child,
+      .nav-links a:last-child { display: none; }
       main { padding: 42px 0 60px; }
-      h1 { font-size: 41px; }
+      h1 { font-size: 37px; overflow-wrap: anywhere; }
       .hero-copy { font-size: 15px; }
       .concept-card { min-height: 210px; }
       .tools-heading { display: block; }
@@ -503,7 +506,7 @@
       .category-nav { margin-bottom: 27px; }
       .category-section + .category-section { margin-top: 38px; padding-top: 32px; }
       .category-heading { align-items: flex-start; }
-      .category-heading p { max-width: 130px; text-align: right; }
+      .category-heading p { flex: 0 0 auto; max-width: 130px; text-align: right; }
       .tool-card { display: flex; }
       .preview { height: 170px; min-height: 0; border-right: 0; border-bottom: 1px solid var(--line); }
       .planned { padding: 18px; }
@@ -574,7 +577,7 @@
       <section class="category-section" id="data-tools" aria-labelledby="data-tools-title">
         <div class="category-heading">
           <div class="category-title"><span class="category-symbol">DATA</span><h3 id="data-tools-title">数据工具</h3></div>
-          <p>1 个在线工具</p>
+          <p>2 个在线工具</p>
         </div>
 
         <div class="tool-grid">
@@ -599,6 +602,27 @@
               <h3>GeoGebra 图形计算器</h3>
               <p>绘制函数、输入方程，并在坐标系中探索代数与几何关系。</p>
               <a class="open-tool" href="https://www.geogebra.org/calculator" target="_blank" rel="noopener noreferrer">访问 GeoGebra</a>
+            </div>
+          </article>
+
+          <article class="tool-card">
+            <div class="preview" aria-hidden="true">
+              <svg viewBox="0 0 340 170">
+                <g fill="#9334e6" opacity=".82">
+                  <circle cx="74" cy="106" r="8"/><circle cx="101" cy="70" r="6"/><circle cx="126" cy="121" r="7"/><circle cx="151" cy="88" r="6"/><circle cx="177" cy="51" r="8"/><circle cx="199" cy="111" r="7"/><circle cx="232" cy="75" r="8"/><circle cx="267" cy="101" r="6"/>
+                </g>
+                <g stroke="#c8a6e8" stroke-width="1.5" opacity=".7">
+                  <line x1="74" y1="106" x2="101" y2="70"/><line x1="101" y1="70" x2="151" y2="88"/><line x1="126" y1="121" x2="151" y2="88"/><line x1="151" y1="88" x2="177" y2="51"/><line x1="151" y1="88" x2="199" y2="111"/><line x1="177" y1="51" x2="232" y2="75"/><line x1="199" y1="111" x2="232" y2="75"/><line x1="232" y1="75" x2="267" y2="101"/>
+                </g>
+                <path d="M44 137 H296" stroke="#5f6368" stroke-width="1.5"/><path d="M44 137 V31" stroke="#5f6368" stroke-width="1.5"/>
+                <text x="282" y="153" fill="#5f6368" font-size="11" font-family="Consolas, monospace">x</text><text x="30" y="35" fill="#5f6368" font-size="11" font-family="Consolas, monospace">y</text>
+              </svg>
+            </div>
+            <div class="tool-body">
+              <span class="online-badge">在线工具</span>
+              <h3>TensorFlow Embedding Projector</h3>
+              <p>把高维嵌入投影到二维或三维空间，探索样本的邻近关系与聚类结构。</p>
+              <a class="open-tool" href="https://projector.tensorflow.org/" target="_blank" rel="noopener noreferrer">访问 Embedding Projector</a>
             </div>
           </article>
         </div>
@@ -669,7 +693,42 @@
       <section class="category-section" id="deep-learning" aria-labelledby="deep-learning-title">
         <div class="category-heading">
           <div class="category-title"><span class="category-symbol">DL</span><h3 id="deep-learning-title">深度学习</h3></div>
-          <p>规划中</p>
+          <p>3 个在线工具</p>
+        </div>
+        <div class="tool-grid">
+          <article class="tool-card">
+            <div class="preview" aria-hidden="true">
+              <svg viewBox="0 0 340 170">
+                <g fill="#fff" stroke="#1967d2" stroke-width="2"><circle cx="58" cy="54" r="12"/><circle cx="58" cy="116" r="12"/><circle cx="151" cy="42" r="12"/><circle cx="151" cy="85" r="12"/><circle cx="151" cy="128" r="12"/><circle cx="255" cy="85" r="14"/></g>
+                <g stroke-width="3" opacity=".75"><path d="M70 54 L139 42 M70 54 L139 85 M70 54 L139 128 M70 116 L139 42 M70 116 L139 85 M70 116 L139 128" stroke="#f9ab00"/><path d="M163 42 L241 85 M163 85 L241 85 M163 128 L241 85" stroke="#9334e6"/></g>
+                <path d="M282 33 C303 54 303 116 282 137" fill="none" stroke="#1967d2" stroke-width="4" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="tool-body"><span class="online-badge">在线工具</span><h3>TensorFlow Playground</h3><p>自由组合数据、特征、隐藏层和训练参数，观察神经网络如何学习决策边界。</p><a class="open-tool" href="https://playground.tensorflow.org/" target="_blank" rel="noopener noreferrer">访问 Playground</a></div>
+          </article>
+
+          <article class="tool-card">
+            <div class="preview" aria-hidden="true">
+              <svg viewBox="0 0 340 170">
+                <rect x="34" y="35" width="92" height="100" rx="8" fill="#202124"/><path d="M57 109 C75 63 92 123 108 66" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+                <g fill="#9334e6"><circle cx="177" cy="49" r="7"/><circle cx="177" cy="85" r="7"/><circle cx="177" cy="121" r="7"/><circle cx="237" cy="64" r="7"/><circle cx="237" cy="106" r="7"/><circle cx="292" cy="85" r="9"/></g>
+                <g stroke="#c9a7e8" stroke-width="1.5"><path d="M126 57 L170 49 M126 77 L170 85 M126 111 L170 121 M184 49 L230 64 M184 85 L230 64 M184 85 L230 106 M184 121 L230 106 M244 64 L283 85 M244 106 L283 85"/></g>
+              </svg>
+            </div>
+            <div class="tool-body"><span class="online-badge">在线工具</span><h3>神经网络 3D 可视化</h3><p>在画板输入手写数字，实时查看全连接网络或卷积网络各层的激活响应。</p><a class="open-tool" href="https://adamharley.com/nn_vis/" target="_blank" rel="noopener noreferrer">访问 3D 可视化</a></div>
+          </article>
+
+          <article class="tool-card">
+            <div class="preview" aria-hidden="true">
+              <svg viewBox="0 0 340 170">
+                <rect x="39" y="43" width="84" height="84" rx="9" fill="#e9d2fd"/><g fill="#9334e6" opacity=".45"><circle cx="64" cy="69" r="13"/><circle cx="94" cy="89" r="16"/><circle cx="70" cy="112" r="11"/></g>
+                <path d="M138 85 H194" stroke="#5f6368" stroke-width="2" stroke-dasharray="5 5"/><path d="M183 75 L194 85 L183 95" fill="none" stroke="#5f6368" stroke-width="2"/>
+                <rect x="211" y="43" width="84" height="84" rx="9" fill="#e8f0fe"/><path d="M230 104 C241 73 263 66 279 90 C270 112 246 118 230 104Z" fill="#1967d2" opacity=".78"/><circle cx="270" cy="74" r="8" fill="#f9ab00"/>
+                <text x="53" y="145" fill="#5f6368" font-size="11" font-family="Consolas, monospace">noise</text><text x="222" y="145" fill="#5f6368" font-size="11" font-family="Consolas, monospace">image</text>
+              </svg>
+            </div>
+            <div class="tool-body"><span class="online-badge">在线工具</span><h3>Diffusion Explainer</h3><p>逐步观察文本条件、潜空间与去噪过程如何共同生成图像。</p><a class="open-tool" href="https://poloclub.github.io/diffusion-explainer/" target="_blank" rel="noopener noreferrer">访问 Diffusion Explainer</a></div>
+          </article>
         </div>
         <div class="planned">
           <div><strong>下一批演示主题</strong><p>从神经元到模型训练，逐步展示数据如何穿过网络。</p></div>
@@ -680,7 +739,30 @@
       <section class="category-section" id="large-language-models" aria-labelledby="large-language-models-title">
         <div class="category-heading">
           <div class="category-title"><span class="category-symbol">LLM</span><h3 id="large-language-models-title">大语言模型</h3></div>
-          <p>规划中</p>
+          <p>2 个在线工具</p>
+        </div>
+        <div class="tool-grid">
+          <article class="tool-card">
+            <div class="preview" aria-hidden="true">
+              <svg viewBox="0 0 340 170">
+                <g fill="#f3e8fd" stroke="#9334e6"><rect x="24" y="65" width="55" height="34" rx="6"/><rect x="102" y="39" width="63" height="34" rx="6"/><rect x="102" y="99" width="63" height="34" rx="6"/><rect x="192" y="65" width="62" height="34" rx="6"/><rect x="278" y="65" width="38" height="34" rx="6"/></g>
+                <g fill="none" stroke="#1967d2" stroke-width="2"><path d="M79 82 C91 82 91 56 102 56"/><path d="M79 82 C91 82 91 116 102 116"/><path d="M165 56 C181 56 177 82 192 82"/><path d="M165 116 C181 116 177 82 192 82"/><path d="M254 82 H278"/></g>
+                <g fill="#5f6368" font-size="10" font-family="Consolas, monospace"><text x="34" y="86">Token</text><text x="113" y="60">Q·K</text><text x="113" y="120">Value</text><text x="201" y="86">Attend</text><text x="286" y="86">Next</text></g>
+              </svg>
+            </div>
+            <div class="tool-body"><span class="online-badge">在线工具</span><h3>Transformer Explainer</h3><p>输入文本并展开 Token、Embedding、注意力和输出概率，理解 GPT-2 的生成流程。</p><a class="open-tool" href="https://poloclub.github.io/transformer-explainer/" target="_blank" rel="noopener noreferrer">访问 Transformer Explainer</a></div>
+          </article>
+
+          <article class="tool-card">
+            <div class="preview" aria-hidden="true">
+              <svg viewBox="0 0 340 170">
+                <g fill="none" stroke="#9334e6" stroke-width="2"><rect x="40" y="29" width="260" height="112" rx="12"/><path d="M88 50 V121 M137 50 V121 M186 50 V121 M235 50 V121" opacity=".35"/></g>
+                <g fill="#1967d2"><circle cx="64" cy="68" r="7"/><circle cx="64" cy="103" r="7"/><circle cx="113" cy="85" r="7"/><circle cx="162" cy="64" r="7"/><circle cx="162" cy="107" r="7"/><circle cx="211" cy="85" r="7"/><circle cx="260" cy="67" r="7"/><circle cx="260" cy="104" r="7"/></g>
+                <g stroke="#f9ab00" stroke-width="1.5" opacity=".75"><path d="M71 68 L106 85 L155 64 L204 85 L253 67 M71 103 L106 85 L155 107 L204 85 L253 104"/></g>
+              </svg>
+            </div>
+            <div class="tool-body"><span class="online-badge">在线工具</span><h3>LLM Visualization</h3><p>沿着模型的计算路径查看嵌入、注意力、矩阵运算和逐层表示变化。</p><a class="open-tool" href="https://bbycroft.net/llm" target="_blank" rel="noopener noreferrer">访问 LLM Visualization</a></div>
+          </article>
         </div>
         <div class="planned">
           <div><strong>下一批演示主题</strong><p>把模型内部的文本处理过程拆成可观察、可调节的步骤。</p></div>
@@ -691,7 +773,31 @@
       <section class="category-section" id="computer-vision" aria-labelledby="computer-vision-title">
         <div class="category-heading">
           <div class="category-title"><span class="category-symbol">CV</span><h3 id="computer-vision-title">计算机视觉</h3></div>
-          <p>规划中</p>
+          <p>2 个在线工具</p>
+        </div>
+        <div class="tool-grid">
+          <article class="tool-card">
+            <div class="preview" aria-hidden="true">
+              <svg viewBox="0 0 340 170">
+                <rect x="26" y="49" width="62" height="72" rx="7" fill="#202124"/><path d="M41 99 C49 70 69 71 75 98" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+                <g fill="#e9d2fd" stroke="#9334e6"><rect x="113" y="37" width="42" height="42" rx="5"/><rect x="113" y="91" width="42" height="42" rx="5"/><rect x="180" y="50" width="42" height="42" rx="5"/><rect x="180" y="102" width="42" height="30" rx="5"/><rect x="247" y="66" width="61" height="45" rx="7"/></g>
+                <g stroke="#1967d2" stroke-width="2"><path d="M88 85 L113 58 M88 85 L113 112 M155 58 L180 71 M155 112 L180 117 M222 71 L247 84 M222 117 L247 96"/></g>
+              </svg>
+            </div>
+            <div class="tool-body"><span class="online-badge">在线工具</span><h3>CNN Explainer</h3><p>逐层查看卷积、ReLU、池化和分类输出，理解卷积神经网络的预测过程。</p><a class="open-tool" href="https://poloclub.github.io/cnn-explainer/" target="_blank" rel="noopener noreferrer">访问 CNN Explainer</a></div>
+          </article>
+
+          <article class="tool-card">
+            <div class="preview" aria-hidden="true">
+              <svg viewBox="0 0 340 170">
+                <g fill="#fff" stroke="#dadce0"><rect x="32" y="36" width="94" height="94"/><rect x="214" y="36" width="94" height="94"/></g>
+                <g fill="#202124"><rect x="48" y="52" width="16" height="16"/><rect x="64" y="68" width="16" height="16"/><rect x="80" y="84" width="16" height="16"/><rect x="96" y="100" width="16" height="16"/></g>
+                <g fill="#9334e6"><rect x="229" y="51" width="16" height="16" opacity=".2"/><rect x="245" y="67" width="16" height="16" opacity=".45"/><rect x="261" y="83" width="16" height="16" opacity=".75"/><rect x="277" y="99" width="16" height="16"/></g>
+                <rect x="147" y="59" width="46" height="46" rx="5" fill="#fff1c7" stroke="#f9ab00"/><g fill="#b06000" font-size="11" font-family="Consolas, monospace"><text x="155" y="76">-1 0</text><text x="155" y="94"> 0 1</text></g><path d="M126 83 H143 M193 83 H210" stroke="#5f6368" stroke-width="2"/>
+              </svg>
+            </div>
+            <div class="tool-body"><span class="online-badge">在线工具</span><h3>Image Kernels</h3><p>选择或编辑卷积核，直观看到模糊、锐化、浮雕和边缘检测如何改变像素。</p><a class="open-tool" href="https://setosa.io/ev/image-kernels/" target="_blank" rel="noopener noreferrer">访问 Image Kernels</a></div>
+          </article>
         </div>
         <div class="planned">
           <div><strong>下一批演示主题</strong><p>观察像素、特征和预测结果之间的联系。</p></div>
