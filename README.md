@@ -2,11 +2,11 @@
 
 把网页里的教学演示提取成可离线使用的工具，或者从一个教学主题出发，制作同风格的新交互演示。
 
-仓库包含可安装的 Codex skill [`w-interactive-demo`](skills/w-interactive-demo/SKILL.md)，以及四个完整工具。默认成品是双击即可运行的 `index.html`，不要求学习者安装框架、启动服务器或联网。
+仓库包含可安装的 Codex skill [`w-interactive-demo`](skills/w-interactive-demo/SKILL.md)，以及五个完整工具。默认成品是双击即可运行的 `index.html`，不要求学习者安装框架、启动服务器或联网。
 
 双击仓库根目录的 [`index.html`](index.html) 可以打开工具主页，并从卡片进入现有工具。
 这个入口不依赖构建步骤，也可以直接从仓库根目录发布到 GitHub Pages。
-主页按数据工具、机器学习、深度学习、大语言模型、计算机视觉、模型评测和强化学习组织；四个本地工具归入机器学习，并收录 GeoGebra、TensorFlow Playground、GAN Lab、CNN Explainer、Transformer Explainer、Arena、LiveBench 等在线互动资源。
+主页按数据工具、机器学习、深度学习、大语言模型、计算机视觉、模型评测和强化学习组织；五个本地工具分布在机器学习和深度学习分类，并收录 GeoGebra、TensorFlow Playground、GAN Lab、CNN Explainer、Transformer Explainer、Arena、LiveBench 等在线互动资源。
 
 ## 能做什么
 
@@ -50,6 +50,7 @@ Copy-Item -Recurse -Force ".\skills\w-interactive-demo" (Join-Path $codexRoot "s
 | [线性回归参数练习](examples/linear-regression/) | 网页提取 | 权重、偏置、拟合直线及 L1/L2/MSE/RMSE |
 | [线性回归梯度下降练习](examples/linear-regression-gradient-descent/) | 网页提取 | 学习率、训练控制、参数更新与损失收敛 |
 | [分类准确率、精确率与召回率](examples/classification-accuracy-precision-recall/) | 网页提取 | 数据集、分类阈值、混淆矩阵及三项指标 |
+| [神经网络节点与隐藏层](examples/neural-network-nodes-hidden-layers/) | 网页提取 | 输入、隐藏层、输出节点、参数编辑与逐步计算 |
 | [逻辑回归互动演示](examples/logistic-regression/) | 新建工具 | Sigmoid 曲线、权重、偏置、阈值、训练与分类指标 |
 
 克隆仓库后，直接双击任一工具目录中的 `index.html`。每个工具的 README 会说明控件、来源和限制。
