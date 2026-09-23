@@ -1,11 +1,10 @@
 # Third-party notices
 
-仓库中的 skill、说明文档以及新制作的工具代码由本项目按 MIT License 提供。下面四个工具包含从 Google 机器学习速成课程页面提取并封装的脚本、数据或组件，因此仍受原内容条款及代码中保留的第三方声明约束：
+仓库中的 skill、说明文档以及新制作的工具代码由本项目按 MIT License 提供。下面三个工具包含从 Google 机器学习速成课程页面提取并封装的脚本、数据或组件，因此仍受原内容条款及代码中保留的第三方声明约束：
 
 | 工具 | 原始页面 |
 | --- | --- |
-| `examples/linear-regression` | [Linear regression: Parameters exercise](https://developers.google.cn/machine-learning/crash-course/linear-regression/parameters-exercise?hl=zh-cn) |
-| `examples/linear-regression-gradient-descent` | [Linear regression: Gradient descent exercise](https://developers.google.cn/machine-learning/crash-course/linear-regression/gradient-descent-exercise?hl=zh-cn) |
+| `examples/linear-regression` | [Linear regression: Gradient descent exercise](https://developers.google.cn/machine-learning/crash-course/linear-regression/gradient-descent-exercise?hl=zh-cn) |
 | `examples/classification-accuracy-precision-recall` | [Classification: Accuracy, recall, precision, and related metrics](https://developers.google.cn/machine-learning/crash-course/classification/accuracy-precision-recall?hl=zh-cn) |
 | `examples/neural-network-nodes-hidden-layers` | [Neural networks: Nodes and hidden layers](https://developers.google.cn/machine-learning/crash-course/neural-networks/nodes-hidden-layers?hl=zh-cn) |
 
