@@ -6,7 +6,7 @@
 
 双击仓库根目录的 [`index.html`](index.html) 可以打开工具主页，并从卡片进入现有工具。
 这个入口不依赖构建步骤，也可以直接从仓库根目录发布到 GitHub Pages。
-主页按数据工具、机器学习、深度学习、大语言模型、计算机视觉和强化学习组织；四个本地工具归入机器学习，并收录 GeoGebra、TensorFlow Playground、CNN Explainer、Transformer Explainer 等在线互动资源。
+主页按数据工具、机器学习、深度学习、大语言模型、计算机视觉、模型评测和强化学习组织；四个本地工具归入机器学习，并收录 GeoGebra、TensorFlow Playground、GAN Lab、CNN Explainer、Transformer Explainer、Arena、LiveBench 等在线互动资源。
 
 ## 能做什么
 
