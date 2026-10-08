@@ -9,4 +9,9 @@
 | `neural-network-nodes-hidden-layers` | 从网页提取 | 网络结构切换、逐步计算和节点参数编辑 |
 | `logistic-regression` | 新建 | 参数、阈值、训练状态、概率曲线和指标保持联动 |
 
+| `object-detection-dataset-viewer` | 新建统一入口 | 三种格式的离线跳转、中英文切换和窄屏布局 |
+| `yolo-dataset-viewer` | 从网页提取 | 本地文件读取、检测框坐标、缩放、拖动与离线运行 |
+| `coco-dataset-viewer` | 从网页提取 | 文件名与 Image ID 匹配、类别名称、检测框和 JSON 树 |
+| `voc-dataset-viewer` | 从网页提取 | XML 类别与坐标解析、缩放、拖动与离线运行 |
+
 新增工具时使用清楚、稳定的英文目录名。不要提交测试依赖、临时网页快照或生成的 ZIP；把第三方来源、离线化改动和许可边界写进工具 README。

@@ -88,6 +88,10 @@ def main() -> int:
             parser.feed(html.read_text(encoding="utf-8"))
             for url in parser.external:
                 fail(f"External runtime resource in {html.relative_to(ROOT)}: {url}")
+            for target in parser.local_links:
+                clean_target = target.split("#", 1)[0]
+                if clean_target and not (directory / clean_target).exists():
+                    fail(f"Broken example link in {html.relative_to(ROOT)}: {target}")
 
     forbidden_names = {"node_modules", ".verification", "playwright-report", "test-results"}
     for path in ROOT.rglob("*"):

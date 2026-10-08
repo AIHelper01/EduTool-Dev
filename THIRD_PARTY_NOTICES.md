@@ -11,3 +11,17 @@
 Google 机器学习教育内容的复用说明见 [Can I reuse content from Machine Learning Crash Course?](https://support.google.com/machinelearningeducation/answer/7652594?hl=en)。具体文件中出现的版权与 SPDX 声明应一并保留。
 
 `examples/logistic-regression` 是本项目新制作的演示，数据为固定种子生成的合成示例。
+
+## 目标检测数据集查看器
+
+以下三个离线工具提取自“我是土堆”，提取日期为 2026-10-08：
+
+| 工具 | 原始页面 |
+| --- | --- |
+| `examples/yolo-dataset-viewer` | [YOLO 数据集查看器](https://xiaotudui.com/labs/yolo-dataset-viewer) |
+| `examples/coco-dataset-viewer` | [COCO 数据集查看器](https://xiaotudui.com/labs/coco-dataset-viewer) |
+| `examples/voc-dataset-viewer` | [Pascal VOC 数据集查看器](https://xiaotudui.com/labs/voc-dataset-viewer) |
+
+保留原工具组件与所需 React 运行时，离线化改动与限制见各工具 README。原组件和站点样式未确认独立开放许可，仍受原作者条款约束，不纳入本项目自有代码的 MIT 授权。React / React DOM / Scheduler / JSX 运行时许可保留在各目录的 `licenses/React-LICENSE.txt`。
+
+`examples/object-detection-dataset-viewer` 是本项目新制作的统一导航入口，按 MIT License 提供。

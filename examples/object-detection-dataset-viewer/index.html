@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-en="Object detection dataset viewer · EduTool">目标检测数据集查看器 · EduTool</title>
+  <style>
+    :root { color-scheme: light; font-family: Arial, "Microsoft YaHei", sans-serif; color: #202124; line-height: 1.6; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #fff; }
+    header, main, footer { width: min(1080px, calc(100% - 36px)); margin-inline: auto; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px 0; border-bottom: 1px solid #dadce0; }
+    .brand { font-weight: 700; color: #681da8; font-size: 19px; }
+    button { padding: 8px 16px; border: 1px solid #dadce0; border-radius: 6px; background: #fff; color: #681da8; font: inherit; cursor: pointer; }
+    main { padding: 44px 0 60px; }
+    h1 { margin: 0; font-size: 26px; line-height: 1.35; }
+    .intro { max-width: 760px; margin: 14px 0 30px; color: #5f6368; }
+    .tools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+    article { display: flex; flex-direction: column; min-width: 0; border: 1px solid #dadce0; border-radius: 10px; padding: 24px; box-shadow: 0 3px 9px rgba(60, 64, 67, .08); }
+    .format { width: fit-content; padding: 5px 10px; border-radius: 6px; background: #f3e8fd; color: #681da8; font: 700 14px Consolas, monospace; }
+    article:nth-child(2) .format { background: #e8f0fe; color: #1967d2; }
+    article:nth-child(3) .format { background: #fff1c7; color: #b06000; }
+    h2 { margin: 18px 0 8px; font-size: 20px; line-height: 1.4; }
+    article p { color: #5f6368; font-size: 14px; margin: 0 0 18px; }
+    code { font-family: Consolas, monospace; overflow-wrap: anywhere; }
+    .open { width: fit-content; margin-top: auto; color: #1967d2; font-size: 14px; font-weight: 700; text-decoration: none; }
+    .open::after { content: " →"; }
+    .open:hover { text-decoration: underline; }
+    .note { margin-top: 26px; padding: 16px 20px; border: 1px solid #d2e3fc; border-radius: 8px; background: #e8f0fe; font-size: 14px; }
+    footer { padding: 22px 0; border-top: 1px solid #dadce0; color: #5f6368; font-size: 13px; }
+    :focus-visible { outline: 3px solid #aecbfa; outline-offset: 3px; }
+    @media (max-width: 760px) { .tools { grid-template-columns: 1fr; } main { padding-top: 30px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="brand">EduTool</span>
+    <button id="language-toggle" type="button" lang="en" aria-label="Switch to English">English</button>
+  </header>
+  <main>
+    <h1 data-en="Object detection dataset viewer">目标检测数据集查看器</h1>
+    <p class="intro" data-en="Choose your annotation format to open an offline viewer. Load local images and annotations to inspect bounding boxes, zoom, and pan. Files are processed in your browser.">选择标注格式，打开对应的离线查看器。上传本地图片与标注，查看检测框、缩放和拖动画布。文件均在浏览器中处理。</p>
+    <div class="tools">
+      <article>
+        <span class="format">YOLO · TXT</span>
+        <h2 data-en="YOLO dataset viewer">YOLO 数据集查看器</h2>
+        <p data-en="Load an image and its TXT annotations. Convert normalized center coordinates and box sizes into bounding boxes; labels show class IDs.">上传图片及对应的 TXT 标注，将归一化的中心坐标与宽高转换为检测框，显示类别编号。</p>
+        <p><code>class_id x_center y_center width height</code></p>
+        <a class="open" href="../yolo-dataset-viewer/index.html" data-en="Open YOLO viewer">打开 YOLO 查看器</a>
+      </article>
+      <article>
+        <span class="format">COCO · JSON</span>
+        <h2 data-en="COCO dataset viewer">COCO 数据集查看器</h2>
+        <p data-en="Match an image by filename in a COCO JSON file. Display category names and bounding boxes, search Image IDs, and explore the JSON structure.">按文件名匹配 COCO JSON 中的图片，显示类别名称和检测框；支持搜索 Image ID、展开查看 JSON 结构。</p>
+        <p><code>bbox: [x, y, width, height]</code></p>
+        <a class="open" href="../coco-dataset-viewer/index.html" data-en="Open COCO viewer">打开 COCO 查看器</a>
+      </article>
+      <article>
+        <span class="format">VOC · XML</span>
+        <h2 data-en="Pascal VOC dataset viewer">Pascal VOC 数据集查看器</h2>
+        <p data-en="Load an image and its Pascal VOC XML annotations. Read object names and corner coordinates to display named bounding boxes.">上传图片及对应的 Pascal VOC XML 标注，读取目标名称和左上、右下角坐标，显示带类别名称的检测框。</p>
+        <p><code>xmin, ymin, xmax, ymax</code></p>
+        <a class="open" href="../voc-dataset-viewer/index.html" data-en="Open VOC viewer">打开 VOC 查看器</a>
+      </article>
+    </div>
+    <p class="note" data-en="All three viewers work offline and display one image at a time. They inspect existing detection annotations; they do not edit labels. The original viewer interfaces remain in Chinese. Dataset downloads and source links require internet access.">三个查看器均可离线运行，每次查看一张图片，用于查看已有检测标注，不编辑标注。原工具界面保留中文；数据集下载及来源链接需要联网。</p>
+  </main>
+  <footer data-en="Tool source: AIHelper01 · Original viewers: Xiaotudui">工具来源：AIHelper01 · 原查看器作者：我是土堆</footer>
+  <script>
+    const labels = [...document.querySelectorAll('[data-en]')].map(node => ({ node, chinese: node.textContent }));
+    const button = document.getElementById('language-toggle');
+    function setLanguage(language) {
+      const english = language === 'en';
+      document.documentElement.lang = english ? 'en' : 'zh-CN';
+      labels.forEach(({ node, chinese }) => { node.textContent = english ? node.dataset.en : chinese; });
+      button.textContent = english ? '中文' : 'English';
+      button.lang = english ? 'zh-CN' : 'en';
+      button.setAttribute('aria-label', english ? '切换到中文' : 'Switch to English');
+      try { localStorage.setItem('edutool-language', document.documentElement.lang); } catch {}
+    }
+    let savedLanguage;
+    try { savedLanguage = localStorage.getItem('edutool-language'); } catch {}
+    setLanguage(savedLanguage);
+    button.addEventListener('click', () => setLanguage(document.documentElement.lang === 'en' ? 'zh-CN' : 'en'));
+  </script>
+</body>
+</html>
