@@ -89,6 +89,9 @@
       text-decoration: none;
     }
 
+    .language-toggle { cursor: pointer; flex-shrink: 0; font-family: inherit; }
+    @media (max-width: 560px) { .nav-links { gap: 12px; } }
+
     .nav-links a:hover { color: var(--purple-dark); }
 
     main { padding: 76px 0 84px; }
@@ -496,7 +499,7 @@
       .site-footer { width: min(100% - 24px, 1080px); }
       .nav { min-height: 58px; }
       .nav-links a:first-child,
-      .nav-links a:last-child { display: none; }
+      .nav-links a[href^="https://github.com/"] { display: none; }
       main { padding: 42px 0 60px; }
       h1 { font-size: 37px; overflow-wrap: anywhere; }
       .hero-copy { font-size: 15px; }
@@ -528,6 +531,7 @@
         <a href="#tools">互动演示</a>
         <a href="./README.md">项目说明</a>
         <a href="https://github.com/AIHelper01/EduTool-Dev">GitHub</a>
+        <button class="button language-toggle" id="language-toggle" type="button" aria-label="Switch to English" lang="en">English</button>
       </div>
     </nav>
   </header>
@@ -912,5 +916,139 @@
     <span>EduTool · 互动教学工具示例</span>
     <span>工具来源：AIHelper01 · <a href="./THIRD_PARTY_NOTICES.md">第三方说明</a></span>
   </footer>
+
+  <script>
+    const translations = {
+      "EduTool 互动教学工具示例主页": "EduTool interactive teaching demos",
+      "EduTool · 互动教学工具": "EduTool · Interactive learning tools",
+      "主导航": "Main navigation",
+      "互动演示": "Interactive demos",
+      "项目说明": "About the project",
+      "把抽象概念，变成可以拖动的图。": "Turn abstract ideas into interactive visuals.",
+      "这里收集轻量、可离线运行的教学演示。调节参数，立即观察曲线、分类结果和指标如何变化。": "Explore lightweight teaching demos that work offline. Adjust parameters and see curves, predictions, and metrics change instantly.",
+      "查看演示": "Explore demos",
+      "了解制作 skill": "Explore the authoring skill",
+      "参数 → 图形 → 理解": "Parameters → Visuals → Understanding",
+      "AI 互动工具": "Interactive AI tools",
+      "按领域浏览。本地工具可直接打开，规划中的主题会随着工具开发逐步补充。": "Browse by field. Open local tools directly; planned topics will be added as new demos are developed.",
+      "工具分类": "Tool categories",
+      "数据工具": "Data tools",
+      "机器学习": "Machine learning",
+      "深度学习": "Deep learning",
+      "大语言模型": "Large language models",
+      "计算机视觉": "Computer vision",
+      "模型评测": "Model evaluation",
+      "强化学习": "Reinforcement learning",
+      "1 个在线工具": "1 online tool",
+      "3 个可用工具": "3 available tools",
+      "1 个本地工具 · 3 个在线工具": "1 local tool · 3 online tools",
+      "5 个在线工具": "5 online tools",
+      "3 个在线工具": "3 online tools",
+      "在线工具": "Online tool",
+      "GeoGebra 图形计算器": "GeoGebra Graphing Calculator",
+      "绘制函数、输入方程，并在坐标系中探索代数与几何关系。": "Plot functions, enter equations, and explore algebra and geometry in a coordinate system.",
+      "网页提取": "Extracted demo",
+      "线性回归参数练习": "Linear regression parameter exercise",
+      "调节学习率并控制训练，观察权重、偏置、拟合直线和多种损失指标的变化。": "Adjust the learning rate and control training to see weights, bias, the fitted line, and loss metrics change.",
+      "打开工具": "Open tool",
+      "分类指标与混淆矩阵": "Classification metrics and confusion matrix",
+      "移动分类阈值，对比准确率、精确率和召回率。": "Move the classification threshold and compare accuracy, precision, and recall.",
+      "新建工具": "Original demo",
+      "逻辑回归互动演示": "Interactive logistic regression",
+      "探索 Sigmoid 概率曲线、分类边界和梯度训练。": "Explore the sigmoid probability curve, decision boundary, and gradient descent.",
+      "神经网络节点与隐藏层": "Neural network nodes and hidden layers",
+      "编辑输入、权重和偏置，对比无隐藏层模型与四节点隐藏层的逐步计算。": "Edit inputs, weights, and biases. Compare step-by-step calculations with no hidden layer and with a four-node hidden layer.",
+      "自由组合数据、特征、隐藏层和训练参数，观察神经网络如何学习决策边界。": "Combine datasets, features, hidden layers, and training settings to see how neural networks learn decision boundaries.",
+      "神经网络 3D 可视化": "3D neural network visualization",
+      "在画板输入手写数字，实时查看全连接网络或卷积网络各层的激活响应。": "Draw a handwritten digit and view live activations across the layers of a fully connected or convolutional network.",
+      "选择二维数据分布并训练生成器与判别器，观察真实样本、生成样本和决策边界的变化。": "Choose a 2D data distribution and train a generator and discriminator. Watch real samples, generated samples, and decision boundaries change.",
+      "下一批演示主题": "Upcoming demo topics",
+      "从神经元到模型训练，逐步展示数据如何穿过网络。": "Follow data through a network, from individual neurons to model training.",
+      "深度学习规划主题": "Planned deep learning topics",
+      "神经网络结构": "Network architecture",
+      "反向传播": "Backpropagation",
+      "卷积与特征图": "Convolutions and feature maps",
+      "把高维嵌入投影到二维或三维空间，探索样本的邻近关系与聚类结构。": "Project high-dimensional embeddings into 2D or 3D to explore neighboring samples and cluster structure.",
+      "输入文本并展开 Token、Embedding、注意力和输出概率，理解 GPT-2 的生成流程。": "Enter text and explore tokens, embeddings, attention, and output probabilities to understand how GPT-2 generates text.",
+      "沿着模型的计算路径查看嵌入、注意力、矩阵运算和逐层表示变化。": "Follow the model's computation through embeddings, attention, matrix operations, and layer representations.",
+      "提示词优化器": "Prompt optimizer",
+      "整理和优化提示词结构，快速生成更清晰、可复用的提示词版本。": "Organize and improve prompt structure to create clearer, reusable prompts.",
+      "选择模型并拆分聊天消息，查看 Token 边界、数量和空白字符。": "Choose a model and tokenize chat messages to inspect token boundaries, counts, and whitespace.",
+      "把模型内部的文本处理过程拆成可观察、可调节的步骤。": "Break the model's text processing into steps you can observe and adjust.",
+      "大语言模型规划主题": "Planned language model topics",
+      "Token 与上下文": "Tokens and context",
+      "注意力机制": "Attention mechanisms",
+      "温度与采样": "Temperature and sampling",
+      "逐层查看卷积、ReLU、池化和分类输出，理解卷积神经网络的预测过程。": "Explore convolution, ReLU, pooling, and classification outputs layer by layer to understand CNN predictions.",
+      "选择或编辑卷积核，直观看到模糊、锐化、浮雕和边缘检测如何改变像素。": "Choose or edit kernels to see how blur, sharpening, embossing, and edge detection change pixels.",
+      "逐步观察文本条件、潜空间与去噪过程如何共同生成图像。": "See how text conditioning, latent space, and denoising work together to generate images.",
+      "观察像素、特征和预测结果之间的联系。": "Explore the connections between pixels, features, and predictions.",
+      "计算机视觉规划主题": "Planned computer vision topics",
+      "卷积核": "Convolution kernels",
+      "图像分类": "Image classification",
+      "目标检测": "Object detection",
+      "Arena 模型排行榜": "Arena model leaderboard",
+      "按用户对战投票、能力类别和模型实验室查看大模型排名与分数。": "Explore model rankings and scores by user votes, capability category, and model lab.",
+      "比较文本、多模态和代码智能体在统一流程下的记忆能力。": "Compare memory capabilities of text, multimodal, and coding agents using a shared evaluation process.",
+      "查看模型在数学、编码、推理等任务上的评测结果。": "View model evaluation results for math, coding, reasoning, and other tasks.",
+      "规划中": "Planned",
+      "展示智能体如何通过行动、奖励和反馈更新策略。": "See how agents update their policies through actions, rewards, and feedback.",
+      "强化学习规划主题": "Planned reinforcement learning topics",
+      "探索与利用": "Exploration and exploitation",
+      "价值函数": "Value functions",
+      "策略更新": "Policy updates",
+      "这些工具也用于验证": "These tools also validate the",
+      "skill 的提取与生成流程。": "skill's extraction and creation workflows.",
+      "EduTool · 互动教学工具示例": "EduTool · Interactive teaching demos",
+      "工具来源：AIHelper01 ·": "Tool source: AIHelper01 ·",
+      "第三方说明": "Third-party notices",
+      "访问提示词优化器": "Visit Prompt Optimizer",
+      "访问 GeoGebra": "Visit GeoGebra",
+      "访问 Playground": "Visit Playground",
+      "访问 3D 可视化": "Visit 3D visualization",
+      "访问 GAN Lab": "Visit GAN Lab",
+      "访问 Embedding Projector": "Visit Embedding Projector",
+      "访问 Transformer Explainer": "Visit Transformer Explainer",
+      "访问 LLM Visualization": "Visit LLM Visualization",
+      "访问 Tiktokenizer": "Visit Tiktokenizer",
+      "访问 CNN Explainer": "Visit CNN Explainer",
+      "访问 Image Kernels": "Visit Image Kernels",
+      "访问 Diffusion Explainer": "Visit Diffusion Explainer",
+      "访问 Arena": "Visit Arena",
+      "访问 Agent Memory": "Visit Agent Memory",
+      "访问 LiveBench": "Visit LiveBench"
+};
+    const textNodes = [];
+    const walker = document.createTreeWalker(document.documentElement, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (node.parentElement.closest('script, style')) continue;
+      const chinese = node.textContent.trim();
+      if (Object.hasOwn(translations, chinese)) {
+        textNodes.push({ node, chinese: node.textContent, english: node.textContent.replace(chinese, translations[chinese]) });
+      }
+    }
+    const attributes = [];
+    document.querySelectorAll('[aria-label], meta[name="description"]').forEach(node => {
+      const name = node.tagName === 'META' ? 'content' : 'aria-label';
+      const chinese = node.getAttribute(name);
+      if (Object.hasOwn(translations, chinese)) attributes.push({ node, name, chinese, english: translations[chinese] });
+    });
+    const languageButton = document.getElementById('language-toggle');
+    function setLanguage(language) {
+      const english = language === 'en';
+      document.documentElement.lang = english ? 'en' : 'zh-CN';
+      textNodes.forEach(item => { item.node.textContent = english ? item.english : item.chinese; });
+      attributes.forEach(item => { item.node.setAttribute(item.name, english ? item.english : item.chinese); });
+      languageButton.textContent = english ? '中文' : 'English';
+      languageButton.lang = english ? 'zh-CN' : 'en';
+      languageButton.setAttribute('aria-label', english ? '切换到中文' : 'Switch to English');
+      try { localStorage.setItem('edutool-language', english ? 'en' : 'zh-CN'); } catch {}
+    }
+    let savedLanguage;
+    try { savedLanguage = localStorage.getItem('edutool-language'); } catch {}
+    setLanguage(savedLanguage === 'en' ? 'en' : 'zh-CN');
+    languageButton.addEventListener('click', () => setLanguage(document.documentElement.lang === 'en' ? 'zh-CN' : 'en'));
+  </script>
 </body>
 </html>

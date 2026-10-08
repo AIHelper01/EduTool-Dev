@@ -5,6 +5,7 @@
 仓库包含可安装的 Codex skill [`w-interactive-demo`](skills/w-interactive-demo/SKILL.md)，以及四个完整工具。默认成品是双击即可运行的 `index.html`，不要求学习者安装框架、启动服务器或联网。
 
 双击仓库根目录的 [`index.html`](index.html) 可以打开工具主页，并从卡片进入现有工具。
+主页右上角提供 English / 中文切换按钮，切换导航、分类和工具介绍，并在浏览器允许本地存储时记住语言选择。此切换仅作用于主页，各演示内部保持原有语言。
 这个入口不依赖构建步骤，也可以直接从仓库根目录发布到 GitHub Pages。
 主页按数据工具、机器学习、深度学习、大语言模型、计算机视觉、模型评测和强化学习组织；四个本地工具分布在机器学习和深度学习分类，并收录 GeoGebra、TensorFlow Playground、GAN Lab、CNN Explainer、Transformer Explainer、Arena、LiveBench 等在线互动资源。
 
