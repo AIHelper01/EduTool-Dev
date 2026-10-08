@@ -7,7 +7,7 @@
 双击仓库根目录的 [`index.html`](index.html) 可以打开工具主页，并从卡片进入现有工具。
 主页右上角提供 English / 中文切换按钮，切换导航、分类和工具介绍，并在浏览器允许本地存储时记住语言选择。主页与目标检测数据集统一入口均支持中英文，各演示内部保持原有语言。
 这个入口不依赖构建步骤，也可以直接从仓库根目录发布到 GitHub Pages。
-主页按数据工具、机器学习、深度学习、大语言模型、计算机视觉、模型评测和强化学习组织；机器学习和深度学习分类提供四个本地教学工具，计算机视觉分类提供目标检测数据集查看器合集（YOLO、COCO、VOC），并收录 GeoGebra、TensorFlow Playground、GAN Lab、CNN Explainer、Transformer Explainer、Arena、LiveBench 等在线互动资源。
+主页按数据工具、机器学习、深度学习、大语言模型、计算机视觉、模型评测和强化学习组织；机器学习和深度学习分类提供五个本地教学工具，计算机视觉分类提供目标检测数据集查看器合集（YOLO、COCO、VOC），并收录 GeoGebra、TensorFlow Playground、GAN Lab、CNN Explainer、Transformer Explainer、Arena、LiveBench 等在线互动资源。
 
 ## 能做什么
 
