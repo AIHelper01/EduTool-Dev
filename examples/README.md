@@ -9,6 +9,9 @@
 | `neural-network-nodes-hidden-layers` | 从网页提取 | 网络结构切换、逐步计算和节点参数编辑 |
 | `logistic-regression` | 新建 | 参数、阈值、训练状态、概率曲线和指标保持联动 |
 | `svm` | 新建 | 线性／RBF 决策边界、支持向量、C／γ、KKT 条件与独立测试指标 |
+| `quantization` | 新建 | 位宽、scale、零点、分组缩放、误差与权重存储估算 |
+| `lora` | 新建 | 冻结权重、低秩矩阵、梯度训练、参数量与权重合并一致性 |
+| `rnn-lstm` | 新建 | 时间步、门控、状态传递与早期输入敏感度 |
 
 | `object-detection-dataset-viewer` | 新建统一入口 | 三种格式的离线跳转、中英文切换和窄屏布局 |
 | `yolo-dataset-viewer` | 从网页提取 | 本地文件读取、检测框坐标、缩放、拖动与离线运行 |

@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>模型量化可视化</title>
+<style>
+*{box-sizing:border-box}body{margin:0;color:#202124;font:15px Arial,"Microsoft YaHei",sans-serif;background:white}main{max-width:1100px;margin:32px auto;padding:0 20px}h1{font-size:26px}h2{font-size:18px;margin:0 0 16px}p{line-height:1.7;color:#5f6368}.panel{background:#f8f9fa;border:1px solid #dadce0;border-radius:10px;padding:20px;margin:20px 0}.controls,.metrics,.charts,.pipeline{display:grid;gap:16px}.controls{grid-template-columns:repeat(4,1fr)}label{display:block;font-weight:600}select,input,button{font:inherit}select,input[type=number]{width:100%;padding:9px;border:1px solid #dadce0;border-radius:5px;background:white;margin-top:8px}input[type=range]{width:100%;accent-color:#1967d2;margin:12px 0}button{border:1px solid #dadce0;border-radius:5px;padding:8px 12px;background:white;color:#1967d2;cursor:pointer}button:hover{background:#eef3fc}:focus-visible{outline:3px solid #1967d2;outline-offset:3px}.metrics{grid-template-columns:repeat(4,1fr);margin-top:20px}.card{background:white;border:1px solid #dadce0;border-radius:8px;padding:16px;min-width:0}.card strong{display:block;font:24px Consolas,monospace;margin:8px 0}.small{font-size:13px;color:#5f6368;line-height:1.6}.charts{grid-template-columns:1fr 1fr;margin-top:20px}svg{width:100%;display:block}svg text{font:12px Arial,sans-serif;fill:#5f6368}.pipeline{grid-template-columns:repeat(3,1fr);margin:16px 0}.pipeline .card{border-top:3px solid #1967d2}code{font-family:Consolas,monospace;overflow-wrap:anywhere}.scroll{overflow:auto}table{width:100%;border-collapse:collapse;white-space:nowrap}th,td{text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;font-size:14px}tr.selected{background:#eef3fc}.legend{font-size:13px;margin-bottom:12px}.purple{color:#9334e6}.orange{color:#b66b00}.blue{color:#1967d2}.bitbar{display:flex;gap:2px;margin:12px 0}.bitbar span{height:24px;display:grid;place-items:center;font-size:12px;min-width:25px;color:white}.sign{background:#9334e6}.exp{background:#1967d2}.mant{background:#b66b00}footer{text-align:center;color:#5f6368;margin:30px}output{color:#1967d2}.actions{display:flex;align-items:center;gap:20px;margin-top:10px}
+@media(max-width:700px){main{margin:20px auto;padding:0 12px}.controls,.metrics{grid-template-columns:1fr 1fr}.charts,.pipeline{grid-template-columns:1fr}.panel{padding:14px}h1{font-size:24px}}
+</style>
+<style>
+.sem-sign{color:#1967d2}.sem-exp{color:#d93025}.sem-mant{color:#188038}.sign{background:#1967d2}.exp{background:#d93025}.mant{background:#188038}.science{font:clamp(18px,3vw,30px) Consolas,monospace;text-align:center;background:white;border:1px solid #dadce0;border-radius:8px;padding:22px 10px;margin:16px 0}.science span{display:inline-block;padding:3px 7px;border-radius:4px}.science .sem-sign{background:#e8f0fe}.science .sem-mant{background:#e6f4ea}.science .sem-exp{background:#fce8e6}.sem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.sem-grid h3{margin:0 0 10px;font-size:17px}.sem-grid strong{font-size:20px}.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}.compare h3{font-size:20px;margin:0}.compare .bitbar span{height:38px;flex-basis:0;min-width:0;font-size:14px}.ruler-note{padding:12px;border-radius:6px;background:#eef3fc;line-height:1.6}.float-result{font:22px Consolas,monospace;margin:12px 0;overflow-wrap:anywhere}.ruler-scroll{overflow:auto}.ruler-scroll svg{min-width:380px}.sem-grid .card{border-top:3px solid currentColor}.sem-grid p{color:#5f6368}.compare-fp{border-top:3px solid #f9ab00}.compare-bf{border-top:3px solid #1967d2}.actions{flex-wrap:wrap}
+@media(max-width:700px){.sem-grid,.compare{grid-template-columns:1fr}.science{line-height:1.9}.ruler-scroll svg{min-width:360px}}
+</style>
+<main>
+<h1>模型量化可视化</h1>
+<p>用更少的 bit 保存模型中的数字。拖动参数，观察小数如何映射到整数，以及还原后丢掉了哪些细节。</p>
+<section class="panel" id="sem-demo">
+<h2>1. 浮点数怎样“装”一个数字？</h2>
+<p>先用十进制科学计数法理解结构，再看下方独立的二进制示例。颜色贯穿整个演示：<b class="sem-sign">蓝色 S＝符号位</b>，<b class="sem-exp">红色 E＝指数字段</b>，<b class="sem-mant">绿色 M＝尾数字段（小数部分）</b>。</p>
+<div class="science" aria-label="十进制科学计数法示例">−12345 = <span class="sem-sign">−</span> <span class="sem-mant">1.2345</span> × 10<sup class="sem-exp">4</sup></div>
+<p class="small">上式是固定的十进制类比。下面的控件演示另一个数，不是把 −12345 转成二进制。类比中的 1.2345 是完整有效数；实际浮点编码的尾数字段只保存其二进制小数部分。</p>
+<div class="sem-grid">
+<div class="card sem-sign"><h3>S · 符号位</h3><label>改变正负<select id="semSign"><option value="1" selected>1＝负数</option><option value="0">0＝正数</option></select></label><p>像一个开关：改变正负，不改变数值大小。</p></div>
+<div class="card sem-exp"><h3>E · 指数字段</h3><label for="semExponent">调节实际指数 e：<output id="semExponentValue"></output></label><input id="semExponent" type="range" min="-8" max="8" value="3" step="1"><p>实际指数每加 1，数值乘以 2；每减 1，数值除以 2。存储的 E 编码还需加偏置，见下方示例。</p></div>
+<div class="card sem-mant"><h3>M · 尾数字段（小数部分）</h3><label for="semFraction">调整 4 位小数部分：<output id="semFractionValue"></output></label><input id="semFraction" type="range" min="0" max="15" value="5" step="1"><p>存储字段只含小数点后的 4 位，不含开头隐含的 1。小数部分每档相差 1/16；最终数值的间隔还需乘以 2ᵉ。</p></div>
+</div>
+<div class="science" id="semFormula" aria-live="polite"></div>
+<div class="card"><div id="semAssembly" class="sem-mant"></div><p id="semExpansion" class="small"></p><p class="small">右下角的 ₂ 表示“二进制”，不是平方。例如 0.0101₂ = 0/2 + 1/4 + 0/8 + 1/16 = 0.3125；右上角的 2³ 才表示 2 的三次方。</p><p id="semEncoding" class="small"></p></div>
+<p class="small" id="semDetail"></p>
+<p class="small">对这里的规范化二进制数：值 = (−1)<sup>S</sup> × <b>完整有效数 (1 + 小数部分)</b> × 2<sup>实际指数 e</sup>。M 固定为 4 位是教学简化，不对应某个实际格式。隐含的 1 不占 M 字段；非规范化数的开头为 0，零、无穷和 NaN 也采用特殊编码。</p>
+</section>
+<section class="panel">
+<h2>2. 换一种格式，能省多少权重显存？</h2>
+<p>浮点数把位数分给符号、指数和尾数：指数影响可表示范围，尾数影响相邻数有多细。整数没有浮点指数和尾数，借助 scale 和零点还原小数。</p>
+<label style="max-width:320px">查看格式<select id="format"><option>FP32</option><option>FP64</option><option>TF32</option><option>BF16</option><option>FP16</option><option>FP8 E4M3</option><option>FP8 E5M2</option><option>NVFP4</option><option>INT8</option><option>INT4</option></select></label>
+<div class="bitbar" id="bitbar" aria-label="位宽结构示意"></div><p id="formatNote"></p>
+<p class="small">S / E / M 后的数字表示各字段占用的 bit 数。这里 M 指存储的小数位数：规范化 FP16 的 M10 加上隐含的 1，具有 11 位二进制有效精度；BF16 的 M7 对应 8 位。范围大不等于精度高。</p>
+<div class="controls"><label>参数量（十亿 / B）<input id="billions" type="number" value="7" min="0.01" max="1000" step="0.01"></label><div class="card">仅权重占用估算<strong id="memory"></strong><span id="memoryNote" class="small"></span></div></div>
+<p class="small">按十进制 GB（10⁹ 字节）估算。除 NVFP4 的示例分组 scale 外，此处只计数值本体；真实整数格式还需 scale / 零点等元数据。实际显存还包括激活、KV cache、临时缓冲；训练还包括梯度和优化器状态。位宽下降不代表速度按比例提升，仍取决于硬件与实现。</p>
+</section>
+<section class="panel" id="float-compare">
+<h2>3. 同样 16 bit：FP16 与 BF16 怎样分配？</h2>
+<p>FP16 分给尾数的位数更多，刻度更细；BF16 分给指数的位数更多，覆盖范围更大。两者的数值本体都占 2 字节。</p>
+<div class="compare">
+<div class="card compare-fp"><h3>FP16 = 1 + 5 + 10</h3><div class="bitbar"><span class="sign" style="flex-grow:1">S1</span><span class="exp" style="flex-grow:5">E5</span><span class="mant" style="flex-grow:10">M10</span></div><div class="small">1 位符号 · 5 位指数 · 10 位尾数</div><p class="ruler-note">像一把“细刻度、较短范围”的尺子。<br>最大有限值：65504<br>最小正规范化值：约 6.10 × 10⁻⁵</p><div class="ruler-scroll"><svg id="fpRuler" viewBox="0 0 420 110" role="img" aria-label="FP16 在 1 附近的真实相邻数刻度"></svg></div><p class="small">1 到 2 之间的间隔：2⁻¹⁰ = 0.0009765625</p><div class="float-result" id="fpResult"></div><div class="small" id="fpError"></div></div>
+<div class="card compare-bf"><h3>BF16 = 1 + 8 + 7</h3><div class="bitbar"><span class="sign" style="flex-grow:1">S1</span><span class="exp" style="flex-grow:8">E8</span><span class="mant" style="flex-grow:7">M7</span></div><div class="small">1 位符号 · 8 位指数 · 7 位尾数</div><p class="ruler-note">像一把“粗刻度、较长范围”的尺子。<br>最大有限值：约 3.39 × 10³⁸<br>最小正规范化值：约 1.18 × 10⁻³⁸</p><div class="ruler-scroll"><svg id="bfRuler" viewBox="0 0 420 110" role="img" aria-label="BF16 在 1 附近的真实相邻数刻度"></svg></div><p class="small">1 到 2 之间的间隔：2⁻⁷ = 0.0078125（粗 8 倍）</p><div class="float-result" id="bfResult"></div><div class="small" id="bfError"></div></div>
+</div>
+<p class="small">“最小正规范化值”不是最小可表示的正数：非规范化数还能更小，FP16 最小正非零值为 2⁻²⁴，BF16 为 2⁻¹³³。数越接近零，可能进入非规范化区间，最终舍入成零。</p>
+<label style="max-width:320px">输入同一个数，对比还原结果<input id="floatInput" type="number" value="1.0007" step="any"></label>
+<div class="actions"><button data-float="1.0007">看小数精度</button><button data-float="70000">看大数溢出</button><button data-float="0.00000001">看小数下溢</button></div>
+<p class="small">上方两把尺子使用相同局部区间 [1, 1.015625]，展示真实可表示刻度；不把整个浮点范围画成等间距。转换按最近值、中点取偶数，包含非规范化数和溢出。BF16 的范围更大有助于降低溢出风险；训练通常仍采用混合精度，稳定性还取决于算法和实现。</p>
+</section>
+<section class="panel" id="integer-demo">
+<h2>4. 动手量化：用整数近似小数</h2>
+<p>整数借助 scale 和零点表示小数。先调节下面的位宽与范围，观察整组权重的误差，再到下一节拆解一个数字的计算过程。</p>
+<div class="controls">
+<label>示例权重<select id="dataset"><option value="balanced">正负均衡</option><option value="positive">全部非负</option><option value="outlier">包含离群值</option></select></label>
+<label>整数位宽<select id="bits"><option value="2">2 bit</option><option value="4" selected>4 bit</option><option value="8">8 bit</option></select></label>
+<label>量化方式<select id="mode"><option value="symmetric">对称（零点为 0）</option><option value="asymmetric">非对称（带零点）</option></select></label>
+<label>缩放粒度<select id="group"><option value="16">全部共享 scale</option><option value="4">每 4 个值一组</option></select></label>
+</div>
+<label style="margin-top:20px" for="range">校准范围倍率：<output id="rangeValue"></output></label>
+<input id="range" type="range" min="25" max="150" value="100" step="5">
+<div class="small">25% 缩小范围，可让刻度更细，但可能截断大数；100% 使用示例的完整范围；150% 扩大范围。</div>
+<div class="actions"><button id="reset">恢复默认</button><span class="small">固定的 16 个合成权重，方便比较。</span></div>
+<div class="metrics">
+<div class="card">均方误差 MSE<strong id="mse"></strong><span class="small">16 个还原误差的平方均值</span></div>
+<div class="card">最大绝对误差<strong id="maxError"></strong><span class="small">最不准确的一个权重</span></div>
+<div class="card">发生截断<strong id="clipped"></strong><span class="small">舍入后的整数超出编码范围</span></div>
+<div class="card">示例存储估算<strong id="storage"></strong><span class="small" id="storageNote"></span></div>
+</div>
+<div class="charts">
+<div class="card"><h2>量化是一把有刻度的尺子</h2><div class="legend"><span class="blue">蓝线：还原值</span> · 灰虚线：原值 y = x</div><svg id="stair" viewBox="0 0 460 300" role="img" aria-label="输入值与还原值的量化阶梯图"></svg><p class="small">横轴输入 x，纵轴还原 x̂。水平段表示多个小数落到同一档；两端变平表示达到编码上限。</p></div>
+<div class="card"><h2>原值与还原值相差多少？</h2><div class="legend"><span class="purple">● 原始权重</span> · <span class="orange">■ 还原权重</span> · 竖线：误差</div><svg id="weights" viewBox="0 0 460 300" role="img" aria-label="16 个权重的原值与还原值对比"></svg><p class="small">横轴权重编号，纵轴数值。切换“包含离群值”，观察一个大数怎样让其余权重的刻度变粗。</p></div>
+</div>
+</section>
+<section class="panel">
+<h2>5. 跟着一个数字走完量化过程</h2>
+<div class="controls"><label>输入小数 x<input id="probe" type="number" min="-8" max="8" step="0.01" value="0.73"></label><label>使用哪一组的尺子<select id="probeGroup"></select></label></div>
+<p class="small">可输入 −8 到 8，或点击下方权重。这里的输入不会重新校准 scale，也不会改变整组权重的 MSE。</p>
+<div id="params" class="small"></div>
+<p class="small">scale 是相邻还原值之间的间隔；zeroPoint 是表示真实数值 0 的整数编码。整数 q 是存储编码，x̂ 是用它还原出的近似值，两者不应直接当作同一个数字比较。</p>
+<div class="pipeline" aria-live="polite">
+<div class="card">① 缩放并舍入<strong id="rounded"></strong><code>r = roundEven(x / scale)</code></div>
+<div class="card">② 加零点，限制编码范围<strong id="integer"></strong><code>q = clip(r + zeroPoint)</code><p class="small" id="binary"></p></div>
+<div class="card">③ 还原为小数<strong id="restored"></strong><code>x̂ = (q − zeroPoint) × scale</code><p class="small" id="probeError"></p></div>
+</div>
+<p class="small">roundEven：舍入到最近整数，恰好在中点时取偶数，例如 0.5 → 0、1.5 → 2。对称模式使用 −Q…Q，Q = 2^(bit−1)−1，保留最负的编码不用，因此 4 bit 在本演示中有 15 档。非对称模式使用无符号的 0…2^bit−1，4 bit 有 16 档。</p>
+<details><summary>查看每个权重的整数编码与误差</summary><div class="scroll"><table><thead><tr><th>编号</th><th>组</th><th>原值</th><th>整数 q</th><th>还原值</th><th>误差 x̂ − x</th><th>操作</th></tr></thead><tbody id="rows"></tbody></table></div></details>
+</section>
+<p class="small">试一试：① 对比 4 bit 与 8 bit 的误差；② 在非负数据上比较对称与非对称；③ 用离群值和缩小范围观察“舍入误差”和“截断误差”的取舍。这里模拟均匀整数量化，不模拟完整模型的精度，也不执行 FP8 / NVFP4 的浮点转换。</p>
+</main><footer>工具来源：AIHelper01</footer>
+<script id="quant-math">
+const datasets={balanced:[-2,-1.65,-1.35,-1.08,-.82,-.53,-.21,0,.17,.38,.66,.91,1.19,1.42,1.72,2],positive:[0,.03,.12,.25,.3,.45,.6,.8,1.02,1.3,1.6,1.9,2.2,2.55,2.9,3.2],outlier:[-.9,-.75,-.6,-.45,-.3,-.15,-.06,0,.08,.19,.31,.44,.57,.71,.9,6]};
+function roundEven(x){const lo=Math.floor(x),f=x-lo;return f===.5?(lo%2===0?lo:lo+1):Math.round(x)}
+function floatApprox(x,e,m){if(x===0)return x;const a=Math.abs(x),emin=2-2**(e-1),emax=2**(e-1)-1,step=2**(Math.max(emin,Math.floor(Math.log2(a)))-m),rounded=roundEven(a/step)*step;return Math.sign(x)*(rounded>=2**(emax+1)?Infinity:rounded)}
+function calibration(values,bits,mode,factor){
+ const sym=mode==='symmetric',qmax=sym?2**(bits-1)-1:2**bits-1,qmin=sym?-qmax:0;
+ const low=Math.min(0,...values)*factor,high=Math.max(0,...values)*factor;
+ const scale=(sym?Math.max(-low,high)/qmax:(high-low)/qmax)||1;
+ const zero=sym?0:Math.max(qmin,Math.min(qmax,roundEven(-low/scale)));
+ return {scale,zero,qmin,qmax};
+}
+function quantize(x,p){const rounded=roundEven(x/p.scale),raw=rounded+p.zero,q=Math.max(p.qmin,Math.min(p.qmax,raw)),restored=(q-p.zero)*p.scale;return {rounded,q,restored,error:restored-x,clipped:raw<p.qmin||raw>p.qmax}}
+function calculate(values,bits,mode,factor,groupSize){const groups=[];for(let i=0;i<values.length;i+=groupSize)groups.push(calibration(values.slice(i,i+groupSize),bits,mode,factor));const rows=values.map((x,i)=>({...quantize(x,groups[Math.floor(i/groupSize)]),x,group:Math.floor(i/groupSize)}));const payload=Math.ceil(values.length*bits/8),metadata=groups.length*(mode==='symmetric'?4:8);return {groups,rows,mse:rows.reduce((s,r)=>s+r.error**2,0)/rows.length,maxError:Math.max(...rows.map(r=>Math.abs(r.error))),clipped:rows.filter(r=>r.clipped).length,payload,metadata}}
+</script>
+<script>
+const $=id=>document.getElementById(id),fmt=x=>Number(x.toFixed(5)).toString();let result,selected=-1;
+function line(x1,y1,x2,y2,extra=''){return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" ${extra}/>`}
+function axes(xlo,xhi,ylo,yhi,xname){let s='';for(let i=0;i<=4;i++){const x=48+i*98,y=250-i*54;s+=line(48,y,440,y,'stroke="#e8eaed"')+`<text x="40" y="${y+4}" text-anchor="end">${fmt(ylo+(yhi-ylo)*i/4)}</text><text x="${x}" y="270" text-anchor="middle">${fmt(xlo+(xhi-xlo)*i/4)}</text>`}return s+`<text x="244" y="294" text-anchor="middle">${xname}</text><text x="48" y="17">数值</text>`}
+function plots(){
+ const p=result.groups[+$('probeGroup').value||0],extent=Math.max(1,...datasets[$('dataset').value].map(Math.abs),Math.abs((p.qmin-p.zero)*p.scale),Math.abs((p.qmax-p.zero)*p.scale))*1.2;
+ const X=x=>48+(x+extent)/(2*extent)*392,Y=y=>250-(y+extent)/(2*extent)*216;
+ let d=`M ${X(-extent)} ${Y(quantize(-extent,p).restored)}`;
+ for(let q=p.qmin;q<p.qmax;q++){const boundary=(q-p.zero+.5)*p.scale;if(boundary<=-extent||boundary>=extent)continue;d+=` H ${X(boundary)} V ${Y((q+1-p.zero)*p.scale)}`}d+=` H ${X(extent)}`;
+ const probe=+$('probe').value;
+ $('stair').innerHTML=axes(-extent,extent,-extent,extent,'输入 x')+line(X(-extent),Y(-extent),X(extent),Y(extent),'stroke="#9aa0a6" stroke-dasharray="5 5"')+`<path d="${d}" fill="none" stroke="#1967d2" stroke-width="2"/>`+(Math.abs(probe)<=extent?`<circle cx="${X(probe)}" cy="${Y(quantize(probe,p).restored)}" r="5" fill="#9334e6"/>`:'');
+ let s=axes(1,16,-extent,extent,'权重编号');result.rows.forEach((r,i)=>{const x=48+i/15*392;s+=line(x,Y(r.x),x,Y(r.restored),'stroke="#9aa0a6" stroke-width="2"')+`<circle cx="${x}" cy="${Y(r.x)}" r="4" fill="#9334e6"/><rect x="${x-3}" y="${Y(r.restored)-3}" width="6" height="6" fill="#f9ab00"/>`});$('weights').innerHTML=s;
+}
+function renderProbe(){const x=+$('probe').value,p=result.groups[+$('probeGroup').value||0];if($('probe').value.trim()===''||!Number.isFinite(x)||x< -8||x>8){for(const id of ['rounded','integer','restored'])$(id).textContent='—';$('binary').textContent='';$('probeError').textContent='请输入 −8 到 8 的有限数值';return}const r=quantize(x,p),bits=+$('bits').value;$('params').textContent=`scale = ${fmt(p.scale)}；zeroPoint = ${p.zero}；编码范围 ${p.qmin}…${p.qmax}；可还原范围 ${fmt((p.qmin-p.zero)*p.scale)}…${fmt((p.qmax-p.zero)*p.scale)}`;$('rounded').textContent=r.rounded;$('integer').textContent=r.q;$('restored').textContent=fmt(r.restored);$('binary').textContent=`${bits} 位编码：${((r.q+2**bits)%2**bits).toString(2).padStart(bits,'0')}${r.clipped?' · 已截断':''}`;$('probeError').textContent=`还原误差：${fmt(r.error)}`;plots()}
+function render(){result=calculate(datasets[$('dataset').value],+$('bits').value,$('mode').value,+$('range').value/100,+$('group').value);$('rangeValue').textContent=$('range').value+'%';$('mse').textContent=fmt(result.mse);$('maxError').textContent=fmt(result.maxError);$('clipped').textContent=result.clipped+' / 16';$('storage').textContent=(result.payload+result.metadata)+' B';$('storageNote').textContent=`编码 ${result.payload} B + 元数据 ${result.metadata} B；FP32 原值 64 B`;const previous=+$('probeGroup').value||0;$('probeGroup').innerHTML=result.groups.map((_,i)=>`<option value="${i}">第 ${i+1} 组</option>`).join('');$('probeGroup').value=Math.min(previous,result.groups.length-1);$('rows').innerHTML=result.rows.map((r,i)=>`<tr class="${i===selected?'selected':''}"><td>${i+1}</td><td>${r.group+1}</td><td>${r.x}</td><td>${r.q}${r.clipped?'（截断）':''}</td><td>${fmt(r.restored)}</td><td>${fmt(r.error)}</td><td><button data-index="${i}" aria-label="查看权重 ${i+1}">查看</button></td></tr>`).join('');renderProbe()}
+for(const id of ['dataset','bits','mode','group','range'])$(id).addEventListener('input',render);
+$('probe').addEventListener('input',renderProbe);$('probeGroup').addEventListener('input',renderProbe);
+$('rows').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;selected=+b.dataset.index;$('probe').value=result.rows[selected].x;$('probeGroup').value=result.rows[selected].group;render()});
+$('reset').addEventListener('click',()=>{$('dataset').value='balanced';$('bits').value='4';$('mode').value='symmetric';$('group').value='16';$('range').value='100';$('probe').value='.73';$('probeGroup').value='0';selected=-1;render()});
+const formats={'FP64':[64,11,52,8,'双精度浮点；更多尾数位能保留更多细节。'],'FP32':[32,8,23,4,'单精度浮点，符号 1 位、指数 8 位、尾数 23 位。'],'TF32':[19,8,10,4,'图示为计算精度：1 + 8 + 10。内存仍按 FP32 的 32 bit 保存，因此权重占用与 FP32 相同。'],'BF16':[16,8,7,2,'指数位与 FP32 相同，范围接近 FP32；尾数较少，细节更粗。'],'FP16':[16,5,10,2,'比 BF16 多 3 位尾数、少 3 位指数；普通有限数的最大值为 65504。'],'FP8 E4M3':[8,4,3,1,'8-bit 浮点的一种形式，偏向尾数精度；具体特殊值约定与变体有关。'],'FP8 E5M2':[8,5,2,1,'比 E4M3 多一位指数、少一位尾数，偏向范围。'],'NVFP4':[4,2,1,.5625,'4-bit E2M1 浮点，配合两级缩放。此处估算每 16 个值共享一个 FP8 scale，即平均 4.5 bit / 值，另加每个 tensor 的 FP32 scale。'],'INT8':[8,0,0,1,'有符号整数通常为 −128…127；需要配合 scale。本演示对称模式为平衡正负档位保留最负编码。'],'INT4':[4,0,0,.5,'有符号整数通常为 −8…7；数值本体可将两个值打包进一字节，实际还需缩放元数据。']};
+function renderFormat(){const name=$('format').value,[bits,e,m,bytes,note]=formats[name];$('bitbar').innerHTML=e?`<span class="sign" style="flex:1">S1</span><span class="exp" style="flex:${e}">E${e}</span><span class="mant" style="flex:${m}">M${m}</span>`:`<span class="exp" style="flex:1">${bits} 位整数编码（无指数 / 尾数）</span>`;$('formatNote').textContent=note;const b=+$('billions').value;$('memory').textContent=Number.isFinite(b)&&b>=.01&&b<=1000?fmt(b*bytes)+' GB':'请输入 0.01–1000';$('memoryNote').textContent=`${bytes} 字节 / 参数${name==='NVFP4'?'（含示例分组 scale；不含 tensor scale）':''}`}
+$('format').addEventListener('input',renderFormat);$('billions').addEventListener('input',renderFormat);render();renderFormat();
+function renderSem(){const s=+$('semSign').value,e=+$('semExponent').value,f=+$('semFraction').value,binary=f.toString(2).padStart(4,'0'),mantissa=1+f/16,value=(s?-1:1)*mantissa*2**e;$('semExponentValue').textContent=e;$('semFractionValue').textContent='0.'+binary+'₂';$('semFormula').innerHTML=`<span class="sem-sign">${s?'−':'+'}</span> <span class="sem-mant">1.${binary}₂</span> × 2<sup class="sem-exp">${e}</sup> = <b>${value}</b>`;$('semAssembly').textContent=`存储字段 M = ${binary} → 小数部分 0.${binary}₂ → 补上隐含的 1 → 完整有效数 1.${binary}₂ = ${mantissa}`;$('semExpansion').textContent=`小数部分的位权展开：${[...binary].map((b,i)=>b+'/'+2**(i+1)).join(' + ')} = ${f/16}。`;$('semEncoding').textContent=`以 FP16 的指数编码为例：偏置为 15，实际指数 e = ${e}，存储 E = e + 15 = ${e+15}，5 位编码为 ${(e+15).toString(2).padStart(5,'0')}。这里只借用 FP16 的指数规则，M 仍是教学用的 4 位。`;$('semDetail').textContent=`S = ${s}；实际指数 = ${e}；小数部分 = ${f}/16 = ${f/16}；有效数 = ${mantissa}。当前指数下，相邻两档相差 ${2**e/16}。`}
+for(const id of ['semSign','semExponent','semFraction'])$(id).addEventListener('input',renderSem);
+function ruler(id,m){let svg=line(30,50,390,50,'stroke="#1967d2" stroke-width="2"');const count=2**m/64;for(let i=0;i<=count;i++){const x=30+i/count*360;svg+=line(x,42,x,58,'stroke="#1967d2" stroke-width="2"')}svg+='<text x="30" y="85">1</text><text x="390" y="85" text-anchor="end">1.015625</text>';$(id).innerHTML=svg}
+function renderFloat(){const text=$('floatInput').value,x=Number(text);for(const [prefix,e,m] of [['fp',5,10],['bf',8,7]]){if(text.trim()===''||!Number.isFinite(x)||Math.abs(x)>1e40){$(prefix+'Result').textContent='请输入绝对值 ≤ 10⁴⁰ 的有限数';$(prefix+'Error').textContent='';continue}const y=floatApprox(x,e,m);$(prefix+'Result').textContent=Number.isFinite(y)?String(y):(y<0?'−∞（溢出）':'∞（溢出）');$(prefix+'Error').textContent=Number.isFinite(y)?`还原误差：${(y-x).toPrecision(6)}${y===0&&x!==0?' · 舍入为零':''}`:'超出有限数范围，舍入为无穷';}}
+$('floatInput').addEventListener('input',renderFloat);document.querySelectorAll('[data-float]').forEach(b=>b.addEventListener('click',()=>{$('floatInput').value=b.dataset.float;renderFloat()}));renderSem();ruler('fpRuler',10);ruler('bfRuler',7);renderFloat();
+</script>
+</html>
