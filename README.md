@@ -2,7 +2,7 @@
 
 把网页里的教学演示提取成可离线使用的工具，或者从一个教学主题出发，制作同风格的新交互演示。
 
-仓库包含可安装的 Codex skill [`w-interactive-demo`](skills/w-interactive-demo/SKILL.md)，以及七个完整工具和一个目标检测数据集统一入口。默认成品是双击即可运行的 `index.html`，不要求学习者安装框架、启动服务器或联网。
+仓库包含可安装的 Codex skill [`w-interactive-demo`](skills/w-interactive-demo/SKILL.md)，以及八个完整工具和一个目标检测数据集统一入口。默认成品是双击即可运行的 `index.html`，不要求学习者安装框架、启动服务器或联网。
 
 双击仓库根目录的 [`index.html`](index.html) 可以打开工具主页，并从卡片进入现有工具。
 主页右上角提供 English / 中文切换按钮，切换导航、分类和工具介绍，并在浏览器允许本地存储时记住语言选择。主页与目标检测数据集统一入口均支持中英文，各演示内部保持原有语言。
@@ -52,6 +52,7 @@ Copy-Item -Recurse -Force ".\skills\w-interactive-demo" (Join-Path $codexRoot "s
 | [分类准确率、精确率与召回率](examples/classification-accuracy-precision-recall/) | 网页提取 | 数据集、分类阈值、混淆矩阵及三项指标 |
 | [神经网络节点与隐藏层](examples/neural-network-nodes-hidden-layers/) | 网页提取 | 输入、隐藏层、输出节点、参数编辑与逐步计算 |
 | [逻辑回归互动演示](examples/logistic-regression/) | 新建工具 | Sigmoid 曲线、权重、偏置、阈值、训练与分类指标 |
+| [SVM 支持向量机可视化](examples/svm/) | 新建工具 | 线性与 RBF 核、C／γ、决策边界、间隔、支持向量与训练／测试指标 |
 | [目标检测数据集查看器](examples/object-detection-dataset-viewer/) | 统一入口 | 选择 YOLO、COCO、Pascal VOC 三个离线工具，中英文导航 |
 | [YOLO 数据集查看器](examples/yolo-dataset-viewer/) | 网页提取 | 本地图片与 TXT 检测标注、类别编号、缩放与拖动画布 |
 | [COCO 数据集查看器](examples/coco-dataset-viewer/) | 网页提取 | JSON 检测框、类别名称、Image ID 搜索与 JSON 树 |

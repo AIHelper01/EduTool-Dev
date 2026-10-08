@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SVM 支持向量机可视化</title>
+  <style>
+    :root { color-scheme: light; --ink:#202124; --muted:#5f6368; --line:#dadce0; --purple:#9334e6; --orange:#f9ab00; --blue:#1967d2; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:#fff; color:var(--ink); font:15px/1.6 Arial,"Microsoft YaHei",sans-serif; }
+    main { max-width:1120px; margin:auto; padding:28px 18px 36px; }
+    h1 { margin:0 0 8px; font-size:25px; line-height:1.35; font-weight:500; }
+    h2 { margin:0 0 12px; font-size:18px; font-weight:500; }
+    .intro { margin:0 0 22px; color:var(--muted); }
+    .demo { padding:22px; background:#f8f9fa; border:1px solid var(--line); border-radius:9px; }
+    .controls { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px; align-items:start; }
+    label.control-label { display:flex; justify-content:space-between; gap:8px; margin-bottom:7px; }
+    select { width:100%; height:42px; padding:0 10px; border:1px solid #80868b; border-radius:4px; background:#fff; color:var(--ink); font:inherit; }
+    input[type=range] { width:100%; margin:10px 0 2px; accent-color:var(--purple); cursor:pointer; }
+    input:disabled { cursor:default; }
+    output, code, dd { font-family:Consolas,monospace; font-variant-numeric:tabular-nums; }
+    .ends { display:flex; justify-content:space-between; color:var(--muted); font-size:12px; }
+    .control-help { margin:5px 0 0; color:var(--muted); font-size:12px; }
+    .toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:18px 0 12px; }
+    button { padding:7px 14px; min-height:38px; border:1px solid #bbb5c6; border-radius:5px; background:#fff; color:#681da8; font:inherit; cursor:pointer; }
+    button.primary { background:var(--purple); color:#fff; border-color:var(--purple); }
+    button:hover { background:#f3e8fd; }
+    button.primary:hover { background:#681da8; }
+    :focus-visible { outline:3px solid #aecbfa; outline-offset:3px; }
+    .toolbar label { display:flex; align-items:center; gap:7px; margin-left:auto; font-size:13px; }
+    input[type=checkbox] { accent-color:var(--purple); }
+    #status { margin:0 0 16px; font-size:13px; color:var(--muted); min-height:22px; }
+    .workspace { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(260px,1fr); gap:16px; align-items:start; }
+    .card { padding:16px; border:1px solid #e3e5e8; border-radius:8px; background:#fff; box-shadow:0 2px 6px #20212410; min-width:0; }
+    .plot-scroll { overflow:auto; }
+    svg { width:100%; height:auto; display:block; }
+    svg [data-index] { cursor:pointer; }
+    svg [data-index]:focus-visible { outline:none; }
+    svg [data-index]:focus-visible .focus-ring { stroke:var(--blue); stroke-width:3; }
+    .legend { display:flex; flex-wrap:wrap; gap:7px 16px; margin-top:10px; color:var(--muted); font-size:12px; }
+    .legend span { display:inline-flex; align-items:center; gap:5px; }
+    .dot { width:10px; height:10px; border-radius:50%; background:var(--purple); }
+    .square { width:10px; height:10px; background:var(--orange); }
+    .ring { width:13px; height:13px; border:2px solid #202124; border-radius:50%; }
+    .curve { width:19px; height:0; border-top:2px solid var(--blue); }
+    .curve.dashed { border-top-style:dashed; }
+    .hint { margin:10px 0 0; color:var(--muted); font-size:13px; }
+    .side { display:grid; gap:14px; }
+    dl { margin:0; }
+    dl div { display:flex; justify-content:space-between; gap:12px; padding:6px 0; border-bottom:1px solid #eef0f2; }
+    dt { color:var(--muted); font-size:13px; }
+    dd { margin:0; text-align:right; font-size:14px; }
+    .model { margin:12px 0 0; color:#681da8; font:12px/1.8 Consolas,"Microsoft YaHei",monospace; overflow-wrap:anywhere; }
+    .sample-title { margin-bottom:8px; color:#681da8; font-size:13px; }
+    .explain { margin-top:16px; padding:16px; border:1px solid #d2e3fc; border-radius:8px; background:#e8f0fe; }
+    .explain h2 { margin-bottom:6px; }
+    .explain p { margin:6px 0; font-size:13px; }
+    footer { margin-top:18px; color:var(--muted); font-size:13px; }
+    [aria-busy=true] #plot { opacity:.55; }
+    @media (max-width:850px) { .controls { grid-template-columns:repeat(2,minmax(0,1fr)); } .workspace { grid-template-columns:1fr; } .side { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media (max-width:540px) { main { padding:18px 10px 28px; } .demo { padding:14px; } .controls { grid-template-columns:1fr; gap:14px; } .side { grid-template-columns:1fr; } .card { padding:12px; } svg { width:520px; max-width:none; } .toolbar label { margin-left:0; } }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>SVM 支持向量机可视化</h1>
+    <p class="intro">调节 C 和核函数，观察决策边界、间隔与支持向量。黑圈标出影响模型的训练样本，红色 × 标出分类错误。</p>
+    <section class="demo" id="demo" aria-label="SVM 互动演示" aria-busy="false">
+      <div class="controls">
+        <div>
+          <label class="control-label" for="dataset">Dataset（数据集）</label>
+          <select id="dataset"><option value="separated">线性可分</option><option value="overlap">重叠数据</option><option value="circles">同心圆</option><option value="xor">XOR（交叉分布）</option></select>
+          <p class="control-help">固定合成数据：48 个训练样本，64 个独立测试样本。</p>
+        </div>
+        <div>
+          <label class="control-label" for="kernel">Kernel（核函数）</label>
+          <select id="kernel"><option value="linear">Linear（线性核）</option><option value="rbf">RBF（高斯核）</option></select>
+          <p class="control-help" id="kernel-help">线性核在二维平面上形成直线边界。</p>
+        </div>
+        <div>
+          <label class="control-label" for="c"><span>C（惩罚系数）</span><output id="c-value" for="c">1.00</output></label>
+          <input id="c" type="range" min="-2" max="2" step="0.1" value="0" aria-label="C 惩罚系数（对数刻度）">
+          <div class="ends"><span>0.01</span><span>100</span></div>
+          <p class="control-help">对数刻度。C 越大，越重视惩罚间隔内样本和分类错误。</p>
+        </div>
+        <div>
+          <label class="control-label" for="gamma"><span>γ（RBF 参数）</span><output id="gamma-value" for="gamma">1.00</output></label>
+          <input id="gamma" type="range" min="-1.3" max="1" step="0.1" value="0" aria-label="gamma 核参数（对数刻度）" disabled>
+          <div class="ends"><span>≈ 0.05</span><span>10</span></div>
+          <p class="control-help">仅用于 RBF。γ 越大，单个样本的影响范围越小。</p>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button id="train" type="button" class="primary">重新训练</button>
+        <button id="reset" type="button">恢复默认</button>
+        <label for="show-test"><input id="show-test" type="checkbox">显示测试样本（空心）</label>
+      </div>
+      <p id="status" role="status" aria-live="polite">正在训练…</p>
+      <div class="workspace">
+        <section class="card" aria-label="决策边界图">
+          <h2>决策边界与支持向量</h2>
+          <div class="plot-scroll" tabindex="0" aria-label="可横向滚动的 SVM 图表">
+            <svg id="plot" viewBox="0 0 600 560" role="group" aria-label="SVM 决策边界、间隔线和可选择的训练样本"></svg>
+          </div>
+          <div class="legend">
+            <span><i class="dot" aria-hidden="true"></i>正类 +1</span><span><i class="square" aria-hidden="true"></i>负类 −1</span>
+            <span><i class="ring" aria-hidden="true"></i>支持向量</span><span><i class="curve" aria-hidden="true"></i>边界 f = 0</span>
+            <span><i class="curve dashed" aria-hidden="true"></i>间隔线 f = ±1</span><span>红色 ×：预测错误</span>
+          </div>
+          <p class="hint" id="dataset-hint"></p>
+          <p class="hint">点击训练样本查看数值；也可用 Tab 选择样本并按 Enter。窄屏可左右滚动图表。</p>
+        </section>
+        <div class="side">
+          <section class="card" aria-label="模型指标">
+            <h2>模型指标</h2>
+            <dl>
+              <div><dt>训练集准确率</dt><dd id="train-accuracy">—</dd></div>
+              <div><dt>测试集准确率</dt><dd id="test-accuracy">—</dd></div>
+              <div><dt>支持向量 / 训练样本</dt><dd id="support-count">—</dd></div>
+              <div><dt>间隔内样本（10⁻³ 容差）</dt><dd id="violation-count">—</dd></div>
+              <div><dt>线性间隔宽度 2 / ‖w‖</dt><dd id="margin-width">—</dd></div>
+              <div><dt>目标值 ½‖w‖² + CΣξ</dt><dd id="objective">—</dd></div>
+              <div><dt>KKT 最大违反量</dt><dd id="kkt">—</dd></div>
+              <div><dt>原始 / 对偶目标差</dt><dd id="dual-gap">—</dd></div>
+            </dl>
+            <p class="model" id="model-formula"></p>
+            <p class="hint">指标按同一模型计算。测试集不参与训练，准确率不代表真实业务性能。</p>
+          </section>
+          <section class="card" aria-label="所选样本详情">
+            <h2>所选训练样本</h2>
+            <p class="sample-title" id="sample-title"></p>
+            <dl>
+              <div><dt>坐标 (x₁, x₂)</dt><dd id="sample-position">—</dd></div>
+              <div><dt>实际 / 预测类别</dt><dd id="sample-class">—</dd></div>
+              <div><dt>决策值 f(x)</dt><dd id="sample-score">—</dd></div>
+              <div><dt>函数间隔 y·f(x)</dt><dd id="sample-margin">—</dd></div>
+              <div><dt>α 系数</dt><dd id="sample-alpha">—</dd></div>
+              <div><dt>ξ = max(0, 1 − y·f)</dt><dd id="sample-slack">—</dd></div>
+            </dl>
+            <p class="hint" id="sample-explanation"></p>
+          </section>
+        </div>
+      </div>
+      <section class="explain" aria-label="SVM 原理说明">
+        <h2>如何读这张图</h2>
+        <p><strong>边界与间隔：</strong>f(x) ≥ 0 判为正类，f(x) &lt; 0 判为负类。蓝色实线是 f = 0，虚线是 f = ±1。背景颜色表示预测类别，f 是决策分数，不是概率。</p>
+        <p><strong>支持向量：</strong>黑圈表示 α &gt; 10⁻⁷。收敛时，0 &lt; α &lt; C 的样本通常位于间隔线上；α = C 的样本可能在间隔内或被分错。数值判断允许求解误差。</p>
+        <p><strong>软间隔：</strong>ξ &gt; 0 表示违反间隔要求，不一定是分类错误；只有实际与预测类别不同时才画红色 ×。C 调节模型复杂度与间隔违反惩罚的权衡。</p>
+        <p><strong>核函数：</strong>线性核 K(x,z) = x·z；RBF 核 K(x,z) = exp(−γ‖x−z‖²)。RBF 的虚线是特征空间间隔在输入平面的投影，并不构成等宽的二维间隔带。</p>
+      </section>
+    </section>
+    <footer>工具来源：AIHelper01 · 本工具为新制作的 SVM 教学演示，数据为固定种子生成的合成示例。</footer>
+  </main>
+  <script id="svm-math">
+    'use strict';
+    const SVM_EPS = 1e-7;
+    const SVM_TOL = 1e-3;
+    function kernelValue(a, b, kind, gamma) {
+      return kind === 'linear' ? a[0] * b[0] + a[1] * b[1]
+        : Math.exp(-gamma * ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2));
+    }
+    function trainSVM(data, kind, C, gamma, maxSweeps = 1500) {
+      if (!['linear', 'rbf'].includes(kind) || !Number.isFinite(C) || C <= 0 || !Number.isFinite(gamma) || gamma <= 0
+        || data.length < 2 || data.some(p => ![-1, 1].includes(p.y) || p.x.length !== 2 || !p.x.every(Number.isFinite))
+        || !data.some(p => p.y === 1) || !data.some(p => p.y === -1)) throw new Error('SVM 参数或二分类数据无效');
+      const n = data.length;
+      // ponytail: full kernel matrix is enough for 48 teaching samples; use a cached solver for large datasets.
+      const K = data.map(a => data.map(b => kernelValue(a.x, b.x, kind, gamma)));
+      const alpha = Array(n).fill(0), scores = Array(n).fill(0);
+      let bias = 0, sweeps = 0;
+      function residual() {
+        let maximum = 0;
+        for (let i = 0; i < n; i++) {
+          const margin = data[i].y * scores[i];
+          if (alpha[i] < C - SVM_EPS) maximum = Math.max(maximum, 1 - margin);
+          if (alpha[i] > SVM_EPS) maximum = Math.max(maximum, margin - 1);
+        }
+        return maximum;
+      }
+      function takePair(i, j) {
+        const yi = data[i].y, yj = data[j].y, ai = alpha[i], aj = alpha[j], sign = yi * yj;
+        const Ei = scores[i] - yi, Ej = scores[j] - yj;
+        const low = sign === 1 ? Math.max(0, ai + aj - C) : Math.max(0, aj - ai);
+        const high = sign === 1 ? Math.min(C, ai + aj) : Math.min(C, C + aj - ai);
+        if (high - low < 1e-12) return false;
+        const eta = Math.max(0, K[i][i] + K[j][j] - 2 * K[i][j]);
+        const slope = yj * (Ei - Ej);
+        let next;
+        if (eta > 1e-12) next = Math.min(high, Math.max(low, aj + slope / eta));
+        else {
+          // Coincident points can have zero curvature; choose the better feasible endpoint.
+          const gain = value => slope * (value - aj) - .5 * eta * (value - aj) ** 2;
+          next = gain(low) > gain(high) ? low : high;
+          if (gain(next) <= 1e-12) return false;
+        }
+        if (Math.abs(next - aj) < 1e-10) return false;
+        const dj = next - aj, di = -sign * dj;
+        const nextAi = ai + di;
+        const b1 = bias - Ei - yi * di * K[i][i] - yj * dj * K[i][j];
+        const b2 = bias - Ej - yi * di * K[i][j] - yj * dj * K[j][j];
+        const nextBias = nextAi > SVM_EPS && nextAi < C - SVM_EPS ? b1
+          : next > SVM_EPS && next < C - SVM_EPS ? b2 : (b1 + b2) / 2;
+        for (let k = 0; k < n; k++) scores[k] += yi * di * K[k][i] + yj * dj * K[k][j] + nextBias - bias;
+        alpha[i] = nextAi; alpha[j] = next; bias = nextBias;
+        return true;
+      }
+      function adjustBias() {
+        const free = [];
+        let low = -Infinity, high = Infinity;
+        for (let i = 0; i < n; i++) {
+          const target = data[i].y - (scores[i] - bias);
+          if (alpha[i] > SVM_EPS && alpha[i] < C - SVM_EPS) free.push(target);
+          if ((data[i].y === 1 && alpha[i] < C - SVM_EPS) || (data[i].y === -1 && alpha[i] > SVM_EPS)) low = Math.max(low, target);
+          if ((data[i].y === -1 && alpha[i] < C - SVM_EPS) || (data[i].y === 1 && alpha[i] > SVM_EPS)) high = Math.min(high, target);
+        }
+        const next = free.length ? free.reduce((a, b) => a + b, 0) / free.length
+          : Number.isFinite(low) && Number.isFinite(high) ? (low + high) / 2 : Number.isFinite(low) ? low : high;
+        if (Number.isFinite(next)) {
+          for (let i = 0; i < n; i++) scores[i] += next - bias;
+          bias = next;
+        }
+      }
+      for (; sweeps < maxSweeps; ) {
+        let changes = 0;
+        for (let offset = 0; offset < n; offset++) {
+          const i = (offset + sweeps) % n, margin = data[i].y * scores[i];
+          if (!((margin < 1 - SVM_TOL && alpha[i] < C - SVM_EPS) || (margin > 1 + SVM_TOL && alpha[i] > SVM_EPS))) continue;
+          const Ei = scores[i] - data[i].y;
+          const candidates = Array.from({ length:n }, (_, j) => j).filter(j => j !== i)
+            .sort((a, b) => Math.abs(Ei - (scores[b] - data[b].y)) - Math.abs(Ei - (scores[a] - data[a].y)));
+          for (const j of candidates) if (takePair(i, j)) { changes++; break; }
+        }
+        sweeps++; adjustBias();
+        if (residual() <= SVM_TOL || changes === 0) break;
+      }
+      const coefficients = alpha.map((a, i) => a * data[i].y);
+      const weights = [0, 1].map(axis => coefficients.reduce((sum, c, i) => sum + c * data[i].x[axis], 0));
+      const active = data.map((p, i) => ({ x:p.x, coefficient:coefficients[i] })).filter(p => p.coefficient !== 0);
+      const score = x => kind === 'linear' ? weights[0] * x[0] + weights[1] * x[1] + bias
+        : active.reduce((sum, p) => sum + p.coefficient * kernelValue(p.x, x, kind, gamma), bias);
+      let norm2 = 0;
+      for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) norm2 += coefficients[i] * coefficients[j] * K[i][j];
+      norm2 = Math.max(0, norm2);
+      const hinge = data.reduce((sum, p) => sum + Math.max(0, 1 - p.y * score(p.x)), 0);
+      const primal = .5 * norm2 + C * hinge;
+      const dual = alpha.reduce((a, b) => a + b, 0) - .5 * norm2;
+      return { alpha, bias, weights, score, norm2, primal, dual, kkt:residual(), sweeps, converged:residual() <= SVM_TOL };
+    }
+    function seededRandom(seed) {
+      let state = seed >>> 0;
+      return () => {
+        state += 0x6D2B79F5;
+        let t = Math.imul(state ^ state >>> 15, 1 | state);
+        t ^= t + Math.imul(t ^ t >>> 7, 61 | t);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      };
+    }
+    function makeDataset(kind, count, seed) {
+      const random = seededRandom(seed);
+      const normal = () => Math.sqrt(-2 * Math.log(Math.max(random(), 1e-12))) * Math.cos(2 * Math.PI * random());
+      const points = [];
+      for (let i = 0; i < count; i++) {
+        const y = i % 2 === 0 ? -1 : 1;
+        let x;
+        do {
+          if (kind === 'circles') {
+            const angle = 2 * Math.PI * random(), radius = (y === 1 ? .8 : 2) + .12 * normal();
+            x = [radius * Math.cos(angle), radius * Math.sin(angle)];
+          } else if (kind === 'xor') {
+            const sign = random() < .5 ? -1 : 1;
+            x = [sign * 1.2 + .32 * normal(), sign * y * 1.2 + .32 * normal()];
+          } else {
+            const spread = kind === 'overlap' ? .8 : .35;
+            x = [y * (kind === 'overlap' ? .55 : 1.3) + spread * normal(), y * .35 + spread * normal()];
+          }
+        } while (x.some(value => Math.abs(value) > 2.8));
+        points.push({ x, y });
+      }
+      return points;
+    }
+  </script>
+  <script>
+    const $ = id => document.getElementById(id);
+    const state = { data:null, model:null, selected:0, showTest:false, kind:'linear', C:1, gamma:1 };
+    let pending = null;
+    const hints = {
+      separated:'线性可分：观察 C 变小时，间隔带与支持向量如何变化。',
+      overlap:'重叠数据：间隔内样本不一定分错；比较 C 对间隔与误分类的影响。',
+      circles:'同心圆：先看线性核，再切换 RBF，比较直线边界与环形边界。',
+      xor:'XOR：线性边界难以分开交叉类别；用 RBF 观察非线性分类。'
+    };
+    function loadData() {
+      const kind = $('dataset').value;
+      const seed = [...kind].reduce((sum, c) => sum + c.charCodeAt(0), 0);
+      state.data = { train:makeDataset(kind, 48, 12000 + seed), test:makeDataset(kind, 64, 90000 + seed) };
+      state.selected = 0;
+    }
+    function updateControls() {
+      state.kind = $('kernel').value;
+      state.C = 10 ** Number($('c').value);
+      state.gamma = 10 ** Number($('gamma').value);
+      $('c-value').value = state.C.toFixed(2);
+      $('gamma-value').value = state.gamma.toFixed(2);
+      $('c').setAttribute('aria-valuetext', state.C.toFixed(2));
+      $('gamma').setAttribute('aria-valuetext', state.gamma.toFixed(2));
+      $('gamma').disabled = state.kind === 'linear';
+      $('kernel-help').textContent = state.kind === 'linear' ? '线性核在二维平面上形成直线边界。' : 'RBF 可以形成非线性边界，γ 决定局部影响范围。';
+    }
+    function fit() {
+      clearTimeout(pending); pending = null;
+      updateControls();
+      state.model = trainSVM(state.data.train, state.kind, state.C, state.gamma);
+      $('demo').setAttribute('aria-busy', 'false');
+      const model = state.model;
+      $('status').textContent = (model.converged ? '已达到求解容差' : '当前为近似解，尚未达到求解容差')
+        + ` · ${model.sweeps} 轮更新 · KKT 最大违反量 ${model.kkt.toExponential(2)} · 参数变化后自动重新训练`;
+      draw(); renderMetrics(); renderSample();
+    }
+    function scheduleFit() {
+      updateControls();
+      clearTimeout(pending);
+      $('demo').setAttribute('aria-busy', 'true');
+      $('status').textContent = '参数已变化，正在重新训练；图表变淡时显示的是上一模型。';
+      pending = setTimeout(fit, 120);
+    }
+    function draw() {
+      if (!state.model) return;
+      const score = state.model.score;
+      const N = 80, left = 64, top = 24, size = 480;
+      const px = x => left + (x + 3) / 6 * size, py = y => top + (3 - y) / 6 * size;
+      const values = Array.from({ length:N + 1 }, (_, row) => Array.from({ length:N + 1 }, (_, col) => score([-3 + 6 * col / N, 3 - 6 * row / N])));
+      const canvas = document.createElement('canvas'); canvas.width = N; canvas.height = N;
+      const context = canvas.getContext('2d'), image = context.createImageData(N, N);
+      for (let row = 0; row < N; row++) for (let col = 0; col < N; col++) {
+        const value = score([-3 + 6 * (col + .5) / N, 3 - 6 * (row + .5) / N]);
+        const color = value >= 0 ? [233, 210, 253] : [255, 238, 184];
+        const strength = .45 + .55 * Math.min(2, Math.abs(value)) / 2;
+        const index = 4 * (row * N + col);
+        for (let k = 0; k < 3; k++) image.data[index + k] = Math.round(255 + (color[k] - 255) * strength);
+        image.data[index + 3] = 255;
+      }
+      context.putImageData(image, 0, 0);
+      function contour(level) {
+        const segments = [];
+        for (let row = 0; row < N; row++) for (let col = 0; col < N; col++) {
+          const corners = [[col,row],[col+1,row],[col+1,row+1],[col,row+1]];
+          const v = corners.map(([x,y]) => values[y][x]);
+          const crossings = [];
+          for (let edge = 0; edge < 4; edge++) {
+            const next = (edge + 1) % 4;
+            if ((v[edge] >= level) === (v[next] >= level)) continue;
+            const fraction = (level - v[edge]) / (v[next] - v[edge]);
+            crossings.push([left + (corners[edge][0] + fraction * (corners[next][0] - corners[edge][0])) / N * size,
+              top + (corners[edge][1] + fraction * (corners[next][1] - corners[edge][1])) / N * size]);
+          }
+          const pairs = crossings.length === 4 && (v[0] >= level) !== (v.reduce((a,b) => a+b,0) / 4 >= level) ? [[0,3],[1,2]] : [[0,1],[2,3]];
+          for (const [a,b] of pairs) if (crossings[a] && crossings[b]) segments.push([crossings[a], crossings[b]].map(p => p.map(x => x.toFixed(6)).join(',')));
+        }
+        // Connect neighboring cells so the dash pattern continues along each margin contour.
+        const neighbors = new Map(), used = new Set(), paths = [];
+        segments.forEach(([a,b], i) => {
+          for (const point of [a,b]) {
+            if (!neighbors.has(point)) neighbors.set(point, []);
+            neighbors.get(point).push(i);
+          }
+        });
+        function trace(start) {
+          let point = start, result = 'M' + point;
+          while (true) {
+            const index = neighbors.get(point).find(i => !used.has(i));
+            if (index === undefined) break;
+            used.add(index);
+            const [a,b] = segments[index];
+            point = point === a ? b : a;
+            result += 'L' + point;
+          }
+          paths.push(result);
+        }
+        for (const [point, edges] of neighbors) if (edges.length === 1 && !used.has(edges[0])) trace(point);
+        segments.forEach(([a], i) => { if (!used.has(i)) trace(a); });
+        return paths.join('');
+      }
+      const parts = [`<defs><clipPath id="plot-clip"><rect x="${left}" y="${top}" width="${size}" height="${size}"/></clipPath></defs>`,
+        `<image href="${canvas.toDataURL()}" x="${left}" y="${top}" width="${size}" height="${size}"/>`];
+      for (let i = -3; i <= 3; i++) {
+        parts.push(`<path d="M${px(i)} ${top}V${top+size}M${left} ${py(i)}H${left+size}" stroke="#fff" stroke-opacity=".75"/>`);
+        parts.push(`<text x="${px(i)}" y="526" text-anchor="middle" fill="#5f6368" font-size="12">${i}</text><text x="50" y="${py(i)+4}" text-anchor="end" fill="#5f6368" font-size="12">${i}</text>`);
+      }
+      parts.push(`<rect x="${left}" y="${top}" width="${size}" height="${size}" fill="none" stroke="#bdc1c6"/>`,
+        '<text x="304" y="552" text-anchor="middle" fill="#5f6368" font-size="14">x₁（合成特征）</text><text transform="translate(18 264) rotate(-90)" text-anchor="middle" fill="#5f6368" font-size="14">x₂（合成特征）</text>',
+        '<g clip-path="url(#plot-clip)">');
+      for (const level of [-1, 0, 1]) parts.push(`<path class="${level === 0 ? 'boundary' : 'margin-line'}" d="${contour(level)}" fill="none" stroke="#1967d2" stroke-width="${level === 0 ? 2.5 : 1.5}" ${level === 0 ? '' : 'stroke-dasharray="6 5"'}/>`);
+      function point(p, index, test) {
+        const x = px(p.x[0]), y = py(p.x[1]), positive = p.y === 1, color = positive ? '#9334e6' : '#f9ab00';
+        const radius = test ? 3.5 : 5;
+        const symbol = positive ? `<circle cx="${x}" cy="${y}" r="${radius}" fill="${test ? '#fff' : color}" stroke="${color}" stroke-width="1.5"/>`
+          : `<rect x="${x-radius}" y="${y-radius}" width="${2*radius}" height="${2*radius}" fill="${test ? '#fff' : color}" stroke="${color}" stroke-width="1.5"/>`;
+        const wrong = (score(p.x) >= 0 ? 1 : -1) !== p.y;
+        const cross = wrong ? `<path d="M${x-3} ${y-3}L${x+3} ${y+3}M${x-3} ${y+3}L${x+3} ${y-3}" stroke="#c5221f" stroke-width="1.8"/>` : '';
+        if (test) return `<g class="test-point">${symbol}${cross}</g>`;
+        const support = state.model.alpha[index] > SVM_EPS;
+        const name = `训练样本 ${index+1}，${positive ? '正' : '负'}类${support ? '，支持向量' : ''}`;
+        return `<g data-index="${index}" tabindex="0" role="button" aria-label="${name}" aria-pressed="${index === state.selected}"><title>${name}；坐标 (${p.x[0].toFixed(2)}, ${p.x[1].toFixed(2)})</title><circle class="focus-ring" cx="${x}" cy="${y}" r="13" fill="transparent" stroke="${index === state.selected ? '#1967d2' : 'none'}" stroke-width="2"/>${support ? `<circle class="support-ring" cx="${x}" cy="${y}" r="9" fill="none" stroke="#202124" stroke-width="1.5"/>` : ''}${symbol}${cross}</g>`;
+      }
+      if (state.showTest) state.data.test.forEach((p,i) => parts.push(point(p,i,true)));
+      state.data.train.forEach((p,i) => parts.push(point(p,i,false)));
+      parts.push('</g>'); $('plot').innerHTML = parts.join('');
+      $('dataset-hint').textContent = hints[$('dataset').value];
+    }
+    function renderMetrics() {
+      const model = state.model, data = state.data.train;
+      const accuracy = points => 100 * points.filter(p => (model.score(p.x) >= 0 ? 1 : -1) === p.y).length / points.length;
+      $('train-accuracy').textContent = accuracy(data).toFixed(1) + '%';
+      $('test-accuracy').textContent = accuracy(state.data.test).toFixed(1) + '%';
+      $('support-count').textContent = model.alpha.filter(a => a > SVM_EPS).length + ' / ' + data.length;
+      $('violation-count').textContent = data.filter(p => p.y * model.score(p.x) < 1 - SVM_TOL).length;
+      $('margin-width').textContent = state.kind === 'linear' ? model.norm2 > 1e-12 ? (2 / Math.sqrt(model.norm2)).toFixed(3) : '无有限间隔' : '—（RBF）';
+      $('objective').textContent = model.primal.toFixed(3);
+      $('kkt').textContent = model.kkt.toExponential(2);
+      $('dual-gap').textContent = Math.max(0, model.primal - model.dual).toExponential(2);
+      $('model-formula').textContent = state.kind === 'linear' ? `f(x) = ${model.weights[0].toFixed(3)} x₁ ${model.weights[1] >= 0 ? '+' : '−'} ${Math.abs(model.weights[1]).toFixed(3)} x₂ ${model.bias >= 0 ? '+' : '−'} ${Math.abs(model.bias).toFixed(3)}`
+        : `f(x) = Σ αᵢ yᵢ exp(−${state.gamma.toFixed(2)} ‖xᵢ−x‖²) + b；b = ${model.bias.toFixed(3)}`;
+    }
+    function renderSample() {
+      const i = state.selected, p = state.data.train[i], model = state.model, score = model.score(p.x), alpha = model.alpha[i];
+      const support = alpha > SVM_EPS, bounded = alpha >= state.C - SVM_EPS;
+      $('sample-title').textContent = `样本 #${i+1} · ${support ? bounded ? '受上界约束的支持向量' : '自由支持向量' : '非支持向量'}`;
+      $('sample-position').textContent = p.x.map(x => x.toFixed(3)).join(', ');
+      $('sample-class').textContent = `${p.y > 0 ? '+1' : '−1'} / ${score >= 0 ? '+1' : '−1'}`;
+      $('sample-score').textContent = score.toFixed(4);
+      $('sample-margin').textContent = (p.y * score).toFixed(4);
+      $('sample-alpha').textContent = alpha.toFixed(6);
+      $('sample-slack').textContent = Math.max(0, 1 - p.y * score).toFixed(4);
+      $('sample-explanation').textContent = !support ? 'α 近似为 0：收敛时该样本一般在间隔带外，不参与决策函数的求和。'
+        : bounded ? 'α 达到 C：此样本可能违反间隔要求。查看 ξ 和实际 / 预测类别，区分间隔违反与分类错误。'
+        : '0 < α < C：收敛时此样本的 y·f 应接近 1，位于对应类别的间隔线上。';
+    }
+    function selectSample(index) {
+      if (pending !== null) return;
+      state.selected = index;
+      $('plot').querySelectorAll('[data-index]').forEach(node => {
+        const selected = Number(node.dataset.index) === index;
+        node.setAttribute('aria-pressed', selected);
+        node.querySelector('.focus-ring').setAttribute('stroke', selected ? '#1967d2' : 'none');
+      });
+      renderSample();
+    }
+    $('plot').addEventListener('click', event => {
+      const point = event.target.closest('[data-index]');
+      if (point) selectSample(Number(point.dataset.index));
+    });
+    $('plot').addEventListener('keydown', event => {
+      const point = event.target.closest('[data-index]');
+      if (point && ['Enter', ' '].includes(event.key)) { event.preventDefault(); selectSample(Number(point.dataset.index)); }
+    });
+    $('dataset').addEventListener('change', () => { loadData(); scheduleFit(); });
+    $('kernel').addEventListener('change', scheduleFit);
+    $('c').addEventListener('input', scheduleFit);
+    $('gamma').addEventListener('input', scheduleFit);
+    $('show-test').addEventListener('change', () => { state.showTest = $('show-test').checked; if (pending === null) draw(); });
+    $('train').addEventListener('click', fit);
+    $('reset').addEventListener('click', () => {
+      $('dataset').value = 'separated'; $('kernel').value = 'linear'; $('c').value = '0'; $('gamma').value = '0';
+      $('show-test').checked = false; state.showTest = false; loadData(); fit();
+    });
+    loadData(); fit();
+  </script>
+</body>
+</html>

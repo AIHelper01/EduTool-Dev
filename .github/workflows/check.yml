@@ -17,3 +17,4 @@ jobs:
         with:
           node-version: "24"
       - run: node scripts/check_homepage_language.js
+      - run: node scripts/check_svm.cjs
