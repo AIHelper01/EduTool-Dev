@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>模型量化可视化 v2</title>
+<style>
+  :root {
+    --ink: #202124;
+    --muted: #5f6368;
+    --line: #dadce0;
+    --surface: #f8f9fa;
+    --purple: #9334e6;
+    --purple-dark: #681da8;
+    --orange: #f9ab00;
+    --orange-dark: #b06000;
+    --blue: #1967d2;
+    --blue-dark: #0b5394;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fff; color: var(--ink); font: 16px/1.5 Arial, "Microsoft YaHei", sans-serif; }
+  main { max-width: 1120px; margin: 0 auto; padding: 28px 18px 38px; }
+  h1 { margin: 0 0 6px; font-size: 25px; line-height: 1.3; font-weight: 500; }
+  .intro { margin: 0 0 22px; color: var(--muted); }
+  .formula { color: var(--purple-dark); font-family: Consolas, "Roboto Mono", monospace; white-space: nowrap; }
+  .demo { border: 1px solid var(--line); border-radius: 9px; background: #fafbff; padding: 24px; }
+  .controls { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 20px; align-items: end; }
+  .control { min-width: 0; }
+  .control-head { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 7px; color: var(--muted); }
+  .control output { color: var(--ink); font-family: Consolas, "Roboto Mono", monospace; font-variant-numeric: tabular-nums; }
+  select { width: 100%; height: 45px; padding: 0 12px; border: 1px solid #777b81; border-radius: 4px; color: var(--ink); background: #fff; font: inherit; }
+  input[type="range"] { width: 100%; margin: 9px 0 3px; accent-color: #6750a4; cursor: pointer; }
+  .range-ends { display: flex; justify-content: space-between; color: var(--muted); font: 12px Consolas, "Roboto Mono", monospace; }
+  .toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 18px 0 16px; }
+  button { min-height: 36px; padding: 6px 13px; border-radius: 5px; border: 1px solid #bbb5c6; background: #fff; color: #4e3282; font: inherit; cursor: pointer; }
+  button:hover { background: #f0e7fb; }
+  button.primary { border-color: var(--purple); background: var(--purple); color: #fff; }
+  button.primary:hover { background: var(--purple-dark); }
+  button:focus-visible, select:focus-visible, input:focus-visible, .weight:focus-visible { outline: 3px solid #aecbfa; outline-offset: 2px; }
+  .status { color: var(--muted); font-size: 13px; }
+  .plot-card, .stat-card { background: #fff; border-radius: 8px; border: 1px solid #e3e5e8; box-shadow: 0 2px 6px #20212415; }
+  .plot-card { padding: 16px 18px 12px; }
+  .plot-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  h2 { margin: 0; color: #3c4043; font-size: 18px; font-weight: 400; }
+  .params { color: var(--muted); font-size: 14px; }
+  .params strong { color: var(--purple-dark); font-family: Consolas, "Roboto Mono", monospace; font-weight: 600; }
+  .plot-scroll { overflow-x: auto; }
+  svg { display: block; width: 100%; height: auto; min-height: 300px; }
+  .axis { stroke: #bdc1c6; stroke-width: 1; }
+  .grid { stroke: #eef0f2; stroke-width: 1; }
+  .tick { fill: var(--muted); font: 11px Consolas, "Roboto Mono", monospace; }
+  .axis-title { fill: var(--muted); font: 12px Arial, "Microsoft YaHei", sans-serif; }
+  .step { fill: none; stroke: var(--blue); stroke-width: 2; }
+  .ideal { stroke: #bdc1c6; stroke-width: 1; stroke-dasharray: 4 4; }
+  .weight { cursor: pointer; }
+  .weight circle { fill: var(--purple); fill-opacity: 0.78; }
+  .weight rect.box { fill: var(--orange); fill-opacity: 0.78; }
+  .weight line { stroke: #9aa0a6; stroke-width: 1; }
+  .weight.selected circle, .weight.selected rect.box { stroke: #202124; stroke-width: 2; }
+  .weight.clipped line { stroke: var(--orange-dark); stroke-width: 2; stroke-dasharray: 3 3; }
+  .legend { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; color: var(--muted); font-size: 13px; padding-top: 6px; }
+  .swatch { display: inline-block; width: 11px; height: 11px; margin-right: 5px; border-radius: 50%; vertical-align: -1px; }
+  .swatch.value { background: var(--purple); }
+  .swatch.restored { border-radius: 2px; background: var(--orange); }
+  .swatch.curve { width: 18px; height: 3px; border-radius: 0; background: var(--blue); vertical-align: 3px; }
+  .swatch.ideal { width: 18px; height: 0; border-top: 2px dashed #bdc1c6; border-radius: 0; vertical-align: 3px; }
+  .swatch.clipped { width: 18px; height: 0; border-top: 2px dashed var(--orange-dark); border-radius: 0; vertical-align: 3px; }
+  .chart-hint { display: none; margin: 6px 0 0; color: var(--muted); font-size: 12px; }
+  .bottom { display: grid; grid-template-columns: minmax(340px, 1.15fr) minmax(300px, 1fr); gap: 14px; margin-top: 14px; }
+  .bottom > * { min-width: 0; }
+  .stat-card { padding: 16px 18px 18px; }
+  .stat-card h2 { margin-bottom: 14px; }
+  .metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 22px; margin: 0; }
+  .metrics div { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; border-bottom: 1px solid #eef0f2; padding: 7px 0; }
+  .metrics dt { color: var(--muted); }
+  .metrics dd { margin: 0; font: 17px Consolas, "Roboto Mono", monospace; font-variant-numeric: tabular-nums; }
+  .breakdown { margin: 0; }
+  .breakdown div { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px solid #eef0f2; }
+  .breakdown dt { color: var(--muted); }
+  .breakdown dd { margin: 0; font: 15px Consolas, "Roboto Mono", monospace; font-variant-numeric: tabular-nums; }
+  .chain { margin: 0 0 12px; padding: 12px 14px; border: 1px solid #e3e5e8; border-radius: 6px; background: var(--surface); font: 14px/1.9 Consolas, "Roboto Mono", monospace; }
+  .chain span { color: var(--muted); }
+  .chain b { font-weight: 600; color: var(--purple-dark); }
+  .explain { margin: 14px 0 0; color: var(--muted); font-size: 13px; }
+  footer { margin-top: 17px; color: var(--muted); font-size: 13px; }
+  @media (max-width: 850px) {
+    .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .bottom { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 540px) {
+    main { padding: 18px 10px 28px; }
+    .demo { padding: 14px; }
+    .controls { grid-template-columns: 1fr; gap: 13px; }
+    .plot-card, .stat-card { padding: 12px; }
+    svg { width: 700px; max-width: none; min-height: 0; }
+    .chart-hint { display: block; }
+    .metrics { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>模型量化可视化 v2</h1>
+  <p class="intro">把一组真实量级的权重走一遍线性量化：<span class="formula">q = clamp(round(x / s) + z)</span>，<span class="formula">x&#770; = (q &minus; z) &times; s</span>。调位宽、对称性、分组和校准范围，看阶梯、误差分布和存储开销怎样一起变化。</p>
+
+  <div class="demo">
+    <div class="controls">
+      <div class="control">
+        <label class="control-head" for="bits">位宽<b> </b><output id="bitsOut">8</output></label>
+        <select id="bits">
+          <option value="2">2 bit</option>
+          <option value="3">3 bit</option>
+          <option value="4" selected>4 bit</option>
+          <option value="5">5 bit</option>
+          <option value="6">6 bit</option>
+          <option value="8">8 bit</option>
+        </select>
+      </div>
+      <div class="control">
+        <label class="control-head" for="mode">量化方式<output id="modeOut">对称</output></label>
+        <select id="mode">
+          <option value="symmetric" selected>对称（零点 = 0）</option>
+          <option value="asymmetric">非对称（含零点）</option>
+        </select>
+      </div>
+      <div class="control">
+        <label class="control-head" for="group">分组粒度<output id="groupOut">整张量</output></label>
+        <select id="group">
+          <option value="0" selected>整张量共享 scale</option>
+          <option value="4">每 4 个权重一组</option>
+          <option value="8">每 8 个权重一组</option>
+          <option value="16">每 16 个权重一组</option>
+        </select>
+      </div>
+      <div class="control">
+        <label class="control-head" for="gain">校准范围<output id="gainOut">1.00&times;</output></label>
+        <input type="range" id="gain" min="0.5" max="1.5" step="0.05" value="1">
+        <div class="range-ends"><span>0.5&times; 更窄</span><span>1.5&times; 更宽</span></div>
+      </div>
+    </div>
+
+    <div class="controls" style="margin-top:18px">
+      <div class="control">
+        <label class="control-head" for="shape">权重分布<output id="shapeOut">长尾＋离群值</output></label>
+        <select id="shape">
+          <option value="uniform">均匀分布</option>
+          <option value="normal">正态分布</option>
+          <option value="outlier" selected>长尾＋离群值</option>
+        </select>
+      </div>
+      <div class="control">
+        <label class="control-head" for="count">权重量<output id="countOut">48</output></label>
+        <select id="count">
+          <option value="24">24</option>
+          <option value="48" selected>48</option>
+          <option value="96">96</option>
+        </select>
+      </div>
+      <div class="control">
+        <label class="control-head" for="round">舍入规则<output id="roundOut">就近取偶</output></label>
+        <select id="round">
+          <option value="halfEven" selected>就近取偶 half-to-even</option>
+          <option value="halfAway">就近进位 half-away</option>
+          <option value="floor">向下取整 floor</option>
+        </select>
+      </div>
+      <div class="control" aria-hidden="true"></div>
+    </div>
+
+    <div class="toolbar">
+      <button type="button" class="primary" id="resample">重新采样权重</button>
+      <button type="button" id="reset">恢复默认</button>
+      <button type="button" id="nextWeight">选中下一个权重</button>
+      <span class="status" id="status"></span>
+    </div>
+
+    <section class="plot-card">
+      <div class="plot-head">
+        <h2>量化阶梯与还原值</h2>
+        <p class="params" id="plotParams"></p>
+      </div>
+      <div class="plot-scroll">
+        <svg id="stairs" viewBox="0 0 940 380" role="img" aria-label="横轴为原始权重，纵轴为反量化还原值，蓝色阶梯为量化映射"></svg>
+      </div>
+      <div class="legend">
+        <span><i class="swatch value"></i>原始权重 x</span>
+        <span><i class="swatch restored"></i>还原权重 x&#770;</span>
+        <span><i class="swatch curve"></i>量化映射 q&rarr;x&#770;</span>
+        <span><i class="swatch ideal"></i>无误差参考线 x&#770;=x</span>
+        <span><i class="swatch clipped"></i>被截断</span>
+      </div>
+      <p class="chart-hint">图区比屏幕宽时可以左右滑动。</p>
+    </section>
+    <p class="explain" id="stairsExplain"></p>
+  </div>
+
+  <div class="bottom">
+    <section class="plot-card">
+      <div class="plot-head">
+        <h2>还原误差分布</h2>
+        <p class="params" id="errorParams"></p>
+      </div>
+      <div class="plot-scroll">
+        <svg id="errors" viewBox="0 0 560 300" role="img" aria-label="把权重按原始值分箱，柱高表示该箱内的平均还原误差"></svg>
+      </div>
+      <p class="chart-hint">图区比屏幕宽时可以左右滑动。</p>
+    </section>
+    <section class="stat-card">
+      <h2>误差与压缩指标</h2>
+      <dl class="metrics" id="metrics"></dl>
+      <p class="explain" id="metricsExplain"></p>
+    </section>
+  </div>
+
+  <div class="bottom">
+    <section class="plot-card">
+      <div class="plot-head">
+        <h2>位宽扫描</h2>
+        <p class="params">其余设置不变，逐一位宽重算</p>
+      </div>
+      <div class="plot-scroll">
+        <svg id="sweep" viewBox="0 0 560 300" role="img" aria-label="横轴为位宽，柱为每参数字节数，折线为均方误差"></svg>
+      </div>
+      <div class="legend">
+        <span><i class="swatch restored"></i>字节 / 参数（对数刻度）</span>
+        <span><i class="swatch curve"></i>均方误差（对数刻度）</span>
+      </div>
+      <p class="chart-hint">图区比屏幕宽时可以左右滑动。</p>
+    </section>
+    <section class="stat-card">
+      <h2 id="chainTitle">选中权重的计算链</h2>
+      <p class="chain" id="chain"></p>
+      <h2>存储估算</h2>
+      <dl class="breakdown" id="storage"></dl>
+      <p class="explain" id="storageExplain"></p>
+    </section>
+  </div>
+
+  <p class="explain">工具自行实现，只演示线性一致量化：不含浮点位域编码、量化感知训练、激活与 KV cache 量化，也不代表真实模型精度。点击阶梯图中的权重点可以看它的完整计算链。</p>
+  <footer>工具来源：AIHelper01 ｜ 单文件离线运行，无外部依赖</footer>
+</main>
+<script id="quant-math">
+/* 纯计算，不接触 DOM；scripts/check_quantization_v2.cjs 直接在 Node 里跑这段 */
+var QUANT = (function () {
+  var SWEEP_BITS = [2, 3, 4, 5, 6, 8];
+
+  function mulberry32(seed) {
+    var a = seed >>> 0;
+    return function () {
+      a = (a + 0x6d2b79f5) >>> 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function gaussian(rng) {
+    var u = 0, v = 0;
+    while (u === 0) u = rng();
+    while (v === 0) v = rng();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+
+  /* 固定种子生成一组可复现的权重，长尾分布故意放一个离群值 */
+  function makeWeights(shape, count, seed) {
+    var rng = mulberry32(seed), values = [], i;
+    for (i = 0; i < count; i += 1) {
+      if (shape === "uniform") values.push(rng() * 2 - 1);
+      else if (shape === "normal") values.push(gaussian(rng) * 0.35);
+      else values.push(Math.abs(rng() - 0.5) < 0.02 ? (rng() < 0.5 ? -1 : 1) * (0.85 + rng() * 0.15) : gaussian(rng) * 0.12);
+    }
+    return values.map(function (v) { return Math.round(v * 1e6) / 1e6; });
+  }
+
+  function codeRange(bits, mode) {
+    var levels = Math.pow(2, bits);
+    return mode === "asymmetric" ? { min: 0, max: levels - 1, levels: levels } : { min: -(levels / 2 - 1), max: levels / 2 - 1, levels: levels };
+  }
+
+  function roundReal(value, mode) {
+    if (mode === "floor") return Math.floor(value);
+    if (mode === "halfAway") return value < 0 ? -Math.floor(-value + 0.5) : Math.floor(value + 0.5);
+    var floor = Math.floor(value), diff = value - floor;
+    if (diff > 0.5) return floor + 1;
+    if (diff < 0.5) return floor;
+    return floor % 2 === 0 ? floor : floor + 1;
+  }
+
+  /* 一组权重的 scale 与零点：对称按最大绝对值，非对称按含零的最小/最大值 */
+  function groupParams(values, mode, gain, roundMode) {
+    var maxAbs = 0, lo = 0, hi = 0, i, v;
+    for (i = 0; i < values.length; i += 1) {
+      v = values[i];
+      if (Math.abs(v) > maxAbs) maxAbs = Math.abs(v);
+      if (v < lo) lo = v;
+      if (v > hi) hi = v;
+    }
+    if (mode === "asymmetric") return { scale: 1, zeroPoint: 0, empty: maxAbs === 0, min: lo * gain, max: hi * gain };
+    return { scale: 1, zeroPoint: 0, empty: maxAbs === 0, min: lo * gain, max: hi * gain };
+  }
+
+  function paramsFor(values, bits, mode, gain, roundMode) {
+    var range = codeRange(bits, mode), params = groupParams(values, mode, gain, roundMode), scale, zeroPoint;
+    if (params.empty) {
+      return { scale: 1, zeroPoint: 0, range: range, empty: true, bound: 0 };
+    }
+    if (mode === "asymmetric") {
+      scale = (params.max - params.min) / (range.levels - 1);
+      zeroPoint = clamp(roundReal(-params.min / scale, roundMode), range.min, range.max);
+      return { scale: scale, zeroPoint: zeroPoint, range: range, empty: false, bound: params.max - params.min };
+    }
+    scale = params.max * gain > 0 ? (Math.max(Math.abs(params.min), params.max) * gain) / range.max : 1;
+    return { scale: scale, zeroPoint: 0, range: range, empty: false, bound: Math.max(Math.abs(params.min), params.max) * gain };
+  }
+
+  function clamp(value, lo, hi) { return value < lo ? lo : value > hi ? hi : value; }
+
+  function encode(x, params, roundMode) {
+    var raw = x / params.scale + params.zeroPoint;
+    var rounded = roundReal(raw, roundMode);
+    var q = clamp(rounded, params.range.min, params.range.max);
+    return { code: q, raw: raw, rounded: rounded, restored: (q - params.zeroPoint) * params.scale, clipped: Math.abs(rounded - q) > 1e-12 };
+  }
+
+  function splitGroups(values, groupSize) {
+    var size = groupSize > 0 ? groupSize : values.length, groups = [], i;
+    if (size <= 0) size = values.length || 1;
+    for (i = 0; i < values.length; i += size) groups.push(values.slice(i, i + size));
+    if (!groups.length) groups.push([]);
+    return groups;
+  }
+
+  /* 逐组求 scale/零点，再逐个数编码；返回与输入等长的还原数组 */
+  function quantizeAll(values, options) {
+    var bits = options.bits, mode = options.mode, gain = options.gain, roundMode = options.roundMode || "halfEven";
+    var groups = splitGroups(values, options.groupSize || 0), restored = [], codes = [], clipped = [], flags = [];
+    var groupInfo = groups.map(function (group) {
+      var params = paramsFor(group, bits, mode, gain, roundMode);
+      var local = group.map(function (x) {
+        var result = encode(x, params, roundMode);
+        restored.push(result.restored);
+        codes.push(result.code);
+        clipped.push(result.clipped);
+        flags.push(result.clipped);
+        return result;
+      });
+      return { scale: params.scale, zeroPoint: params.zeroPoint, size: group.length, empty: params.empty, range: params.range, bound: params.bound, encodings: local };
+    });
+    return { restored: restored, codes: codes, clipped: flags, groups: groupInfo, groupSize: options.groupSize || 0 };
+  }
+
+  function metrics(original, restored, clippedCount) {
+    var i, se = 0, ae = 0, max = 0, sx = 0, errors = [];
+    for (i = 0; i < original.length; i += 1) {
+      var e = restored[i] - original[i];
+      errors.push(e);
+      se += e * e;
+      ae += Math.abs(e);
+      if (Math.abs(e) > max) max = Math.abs(e);
+      sx += original[i] * original[i];
+    }
+    var n = original.length || 1;
+    return {
+      mse: se / n,
+      mae: ae / n,
+      maxError: max,
+      clipped: clippedCount || 0,
+      sqnr: se === 0 ? Infinity : 10 * Math.log10(sx / se),
+      errors: errors
+    };
+  }
+
+  /* 打包整数载荷 + 每组 FP32 scale（非对称再加每组 1 字节整数零点） */
+  function storage(bits, count, groupSize, mode) {
+    var groups = groupSize > 0 ? Math.ceil(count / groupSize) : 1;
+    var payload = (count * bits) / 8;
+    var scaleBytes = groups * 4;
+    var zeroBytes = mode === "asymmetric" ? groups * 1 : 0;
+    var total = payload + scaleBytes + zeroBytes;
+    return { groups: groups, payload: payload, scaleBytes: scaleBytes, zeroBytes: zeroBytes, total: total, perParam: count ? total / count : 0, fp32PerParam: 4, ratio: count ? 4 / (total / count) : 0 };
+  }
+
+  function sweep(values, options) {
+    return SWEEP_BITS.map(function (bits) {
+      var result = quantizeAll(values, { bits: bits, mode: options.mode, groupSize: options.groupSize, gain: options.gain, roundMode: options.roundMode });
+      var stats = metrics(values, result.restored, result.clipped.filter(Boolean).length);
+      var store = storage(bits, values.length, options.groupSize, options.mode);
+      return { bits: bits, mse: stats.mse, maxError: stats.maxError, sqnr: stats.sqnr, clipped: stats.clipped, perParam: store.perParam, ratio: store.ratio };
+    });
+  }
+
+  return {
+    SWEEP_BITS: SWEEP_BITS, mulberry32: mulberry32, makeWeights: makeWeights, codeRange: codeRange, roundReal: roundReal,
+    paramsFor: paramsFor, encode: encode, splitGroups: splitGroups, quantizeAll: quantizeAll, metrics: metrics, storage: storage, sweep: sweep
+  };
+})();
+if (typeof module !== "undefined" && module.exports) module.exports = QUANT;
+</script>
+
+<script>
+(function () {
+  var SVG_NS = "http://www.w3.org/2000/svg";
+  var DEFAULTS = { bits: 4, mode: "symmetric", groupSize: 0, gain: 1, shape: "outlier", count: 48, roundMode: "halfEven", seed: 20261010 };
+  var state = Object.assign({}, DEFAULTS);
+  var selected = 0;
+  var els = {};
+  ["bits","mode","group","gain","shape","count","round","bitsOut","modeOut","groupOut","gainOut","shapeOut","countOut","roundOut",
+   "resample","reset","nextWeight","status","stairs","plotParams","stairsExplain","errors","errorParams","sweep","metrics",
+   "metricsExplain","chain","chainTitle","storage","storageExplain"].forEach(function (id) { els[id] = document.getElementById(id); });
+
+  function el(tag, attrs, text) {
+    var node = document.createElementNS(SVG_NS, tag), key;
+    for (key in attrs) node.setAttribute(key, attrs[key]);
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+  function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+  function scale(domain, range) {
+    var d0 = domain[0], d1 = domain[1], r0 = range[0], r1 = range[1];
+    var f = function (v) { return r0 + (v - d0) / (d1 - d0) * (r1 - r0); };
+    f.invert = function (v) { return d0 + (v - r0) / (r1 - r0) * (d1 - d0); };
+    return f;
+  }
+  function logScale(domain, range) {
+    var l0 = Math.log10(domain[0]), l1 = Math.log10(domain[1]);
+    return function (v) {
+      var value = Math.max(v, domain[0]);
+      return range[0] + (Math.log10(value) - l0) / (l1 - l0) * (range[1] - range[0]);
+    };
+  }
+  function fmt(value, digits) {
+    if (!isFinite(value)) return "∞";
+    var fixed = Math.abs(value) > 0 ? digits : 0;
+    if (value !== 0 && Math.abs(value) < 1e-4) return value.toExponential(2);
+    return value.toFixed(fixed);
+  }
+  function fmtInt(value) { return Math.round(value).toLocaleString("en-US"); }
+  function optionText(select) { return select.options[select.selectedIndex].text; }
+
+  function syncLabels(values) {
+    els.bitsOut.textContent = els.bits.value + " bit";
+    els.modeOut.textContent = els.mode.value === "symmetric" ? "对称" : "非对称";
+    els.groupOut.textContent = els.group.value === "0" ? "整张量" : "每组 " + els.group.value;
+    els.gainOut.textContent = Number(els.gain.value).toFixed(2) + "×";
+    els.shapeOut.textContent = optionText(els.shape);
+    els.countOut.textContent = els.count.value;
+    els.roundOut.textContent = els.round.value === "halfEven" ? "就近取偶" : els.round.value === "halfAway" ? "就近进位" : "向下取整";
+  }
+
+  function readState() {
+    state.bits = Number(els.bits.value);
+    state.mode = els.mode.value;
+    state.groupSize = Number(els.group.value);
+    state.gain = Number(els.gain.value);
+    state.shape = els.shape.value;
+    state.count = Number(els.count.value);
+    state.roundMode = els.round.value;
+  }
+
+  function currentOptions() {
+    return { bits: state.bits, mode: state.mode, groupSize: state.groupSize, gain: state.gain, roundMode: state.roundMode };
+  }
+
+  function drawStairs(values, result, stats) {
+    var svg = els.stairs;
+    clear(svg);
+    var width = 940, height = 380, margin = { top: 14, right: 16, bottom: 46, left: 62 };
+    var limit = 0, i;
+    for (i = 0; i < values.length; i += 1) limit = Math.max(limit, Math.abs(values[i]), Math.abs(result.restored[i]));
+    limit = limit > 0 ? limit * 1.08 : 1;
+    var x = scale([-limit, limit], [margin.left, width - margin.right]);
+    var y = scale([-limit, limit], [height - margin.bottom, margin.top]);
+
+    svg.appendChild(el("line", { x1: margin.left, y1: y(0), x2: width - margin.right, y2: y(0), class: "axis" }));
+    svg.appendChild(el("line", { x1: x(0), y1: margin.top, x2: x(0), y2: height - margin.bottom, class: "axis" }));
+    [-1, -0.5, 0.5, 1].forEach(function (tick) {
+      var value = limit * tick;
+      svg.appendChild(el("line", { x1: x(value), y1: margin.top, x2: x(value), y2: height - margin.bottom, class: "grid" }));
+      svg.appendChild(el("line", { x1: margin.left, y1: y(value), x2: width - margin.right, y2: y(value), class: "grid" }));
+      svg.appendChild(el("text", { x: x(value), y: height - margin.bottom + 16, class: "tick", "text-anchor": "middle" }, fmt(value, 2)));
+      svg.appendChild(el("text", { x: margin.left - 8, y: y(value) + 4, class: "tick", "text-anchor": "end" }, fmt(value, 2)));
+    });
+    svg.appendChild(el("line", { x1: x(-limit), y1: y(-limit), x2: x(limit), y2: y(limit), class: "ideal" }));
+    svg.appendChild(el("text", { x: -height / 2, y: 16, class: "axis-title", "text-anchor": "middle", transform: "rotate(-90)" }, "还原值 x̂"));
+    svg.appendChild(el("text", { x: margin.left, y: height - 8, class: "axis-title" }, "原始权重 x"));
+
+    var selectedGroup = 0, offset = 0;
+    for (i = 0; i < result.groups.length; i += 1) { offset += result.groups[i].size; if (selected < offset) { selectedGroup = i; break; } }
+    result.groups.forEach(function (group, index) {
+      var path = staircasePath(group, x, y, limit);
+      if (path) svg.appendChild(el("path", { d: path, class: "step", opacity: index === selectedGroup ? 1 : 0.25 }));
+    });
+
+    for (i = 0; i < values.length; i += 1) {
+      var g = el("g", { class: "weight" + (i === selected ? " selected" : "") + (result.clipped[i] ? " clipped" : ""), tabindex: 0, role: "button" });
+      g.setAttribute("aria-label", "权重 " + (i + 1) + "，原始 " + fmt(values[i], 4) + "，还原 " + fmt(result.restored[i], 4));
+      g.appendChild(el("line", { x1: x(values[i]), y1: y(values[i]), x2: x(values[i]), y2: y(result.restored[i]) }));
+      g.appendChild(el("circle", { cx: x(values[i]), cy: y(values[i]), r: i === selected ? 6 : 4 }));
+      g.appendChild(el("rect", { class: "box", x: x(values[i]) - 4, y: y(result.restored[i]) - 4, width: 8, height: 8 }));
+      g.addEventListener("click", makeSelector(i));
+      g.addEventListener("keydown", function (index) {
+        return function (event) {
+          if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selected = index; render(); }
+        };
+      }(i));
+      svg.appendChild(g);
+    }
+    els.plotParams.innerHTML = "编码级数 <strong>" + result.groups[0].range.levels + "</strong> ｜ scale 组数 <strong>" + result.groups.length + "</strong> ｜ 截断 <strong>" + stats.clipped + "</strong> 个";
+  }
+
+  function staircasePath(group, x, y, limit) {
+    var range = group.range, step = group.scale, zero = group.zeroPoint, parts = [], q;
+    var lo = Math.max(range.min, Math.ceil((-limit - zero * step) / step - 0.5));
+    var hi = Math.min(range.max, Math.floor((limit - zero * step) / step + 0.5));
+    if (hi < lo) return "";
+    if (hi - lo > 600) hi = lo + 600;
+    for (q = lo; q <= hi; q += 1) {
+      var value = (q - zero) * step;
+      var from = Math.max(-limit, (q - 0.5 - zero) * step);
+      var to = Math.min(limit, (q + 0.5 - zero) * step);
+      if (to <= from) continue;
+      parts.push("M" + x(from).toFixed(2) + " " + y(value).toFixed(2) + "H" + x(to).toFixed(2));
+      var next = Math.min(limit, (q + 1 - zero) * step);
+      parts.push("M" + x(to).toFixed(2) + " " + y(value).toFixed(2) + "V" + y(next).toFixed(2));
+    }
+    return parts.join("");
+  }
+
+  function drawErrors(values, result) {
+    var svg = els.errors;
+    clear(svg);
+    var width = 560, height = 300, margin = { top: 12, right: 14, bottom: 42, left: 52 };
+    var limit = 0, i;
+    for (i = 0; i < values.length; i += 1) limit = Math.max(limit, Math.abs(values[i]));
+    limit = limit > 0 ? limit : 1;
+    var bins = 12, sums = new Array(bins).fill(0), counts = new Array(bins).fill(0);
+    for (i = 0; i < values.length; i += 1) {
+      var index = Math.min(bins - 1, Math.floor((values[i] + limit) / (2 * limit) * bins));
+      sums[index] += Math.abs(result.restored[i] - values[i]);
+      counts[index] += 1;
+    }
+    var peaks = sums.map(function (sum, b) { return counts[b] ? sum / counts[b] : 0; });
+    var peak = Math.max.apply(null, peaks.concat([1e-9]));
+    var x = scale([-limit, limit], [margin.left, width - margin.right]);
+    var y = scale([0, peak * 1.15], [height - margin.bottom, margin.top]);
+    svg.appendChild(el("line", { x1: margin.left, y1: height - margin.bottom, x2: width - margin.right, y2: height - margin.bottom, class: "axis" }));
+    svg.appendChild(el("line", { x1: x(0), y1: margin.top, x2: x(0), y2: height - margin.bottom, class: "grid" }));
+    [0.25, 0.5, 0.75, 1].forEach(function (tick) {
+      svg.appendChild(el("line", { x1: margin.left, y1: y(peak * tick), x2: width - margin.right, y2: y(peak * tick), class: "grid" }));
+      svg.appendChild(el("text", { x: margin.left - 6, y: y(peak * tick) + 4, class: "tick", "text-anchor": "end" }, fmt(peak * tick, 4)));
+    });
+    [-limit, -limit / 2, 0, limit / 2, limit].forEach(function (tick) {
+      svg.appendChild(el("text", { x: x(tick), y: height - margin.bottom + 16, class: "tick", "text-anchor": "middle" }, fmt(tick, 2)));
+    });
+    svg.appendChild(el("text", { x: margin.left, y: height - 6, class: "axis-title" }, "原始权重 x"));
+    svg.appendChild(el("text", { x: width - margin.right, y: margin.top + 10, class: "axis-title", "text-anchor": "end" }, "平均 |x̂ − x|"));
+    for (i = 0; i < bins; i += 1) {
+      if (!counts[i]) continue;
+      var from = -limit + (2 * limit / bins) * i, to = from + 2 * limit / bins;
+      svg.appendChild(el("rect", { x: x(from) + 1, y: y(peaks[i]), width: Math.max(2, x(to) - x(from) - 2), height: Math.max(0, height - margin.bottom - y(peaks[i])), fill: "#f9ab00" }));
+    }
+    els.errorParams.innerHTML = "最大误差 <strong>" + fmt(Math.max.apply(null, peaks), 4) + "</strong> ｜ 分 " + bins + " 箱";
+  }
+
+  function drawSweep(values, stats) {
+    var svg = els.sweep;
+    clear(svg);
+    var width = 560, height = 300, margin = { top: 14, right: 56, bottom: 42, left: 62 };
+    var rows = QUANT.sweep(values, currentOptions());
+    var mseMax = 1, mseMin = 1e-9;
+    rows.forEach(function (row) { mseMax = Math.max(mseMax, row.mse); mseMin = Math.min(mseMin, Math.max(row.mse, 1e-12)); });
+    var yBytes = logScale([0.1, 4.5], [height - margin.bottom, margin.top]);
+    var yMse = logScale([mseMin / 2, mseMax * 2], [height - margin.bottom, margin.top]);
+    var slot = (width - margin.left - margin.right) / rows.length;
+    svg.appendChild(el("line", { x1: margin.left, y1: height - margin.bottom, x2: width - margin.right, y2: height - margin.bottom, class: "axis" }));
+    [4, 2, 1, 0.5, 0.25].forEach(function (tick) {
+      svg.appendChild(el("line", { x1: margin.left, y1: yBytes(tick), x2: width - margin.right, y2: yBytes(tick), class: "grid" }));
+      svg.appendChild(el("text", { x: width - margin.right + 6, y: yBytes(tick) + 4, class: "tick" }, tick + "B"));
+    });
+    svg.appendChild(el("text", { x: width - margin.right + 6, y: margin.top + 2, class: "axis-title" }, "字节/参数"));
+    svg.appendChild(el("text", { x: margin.left - 6, y: margin.top + 2, class: "axis-title", "text-anchor": "end" }, "MSE"));
+    var points = [], i;
+    for (i = 0; i < rows.length; i += 1) {
+      var center = margin.left + slot * (i + 0.5);
+      svg.appendChild(el("text", { x: center, y: height - margin.bottom + 16, class: "tick", "text-anchor": "middle" }, rows[i].bits + " bit"));
+      svg.appendChild(el("rect", {
+        x: center - slot * 0.26, y: yBytes(rows[i].perParam), width: slot * 0.52,
+        height: Math.max(1, height - margin.bottom - yBytes(rows[i].perParam)),
+        fill: rows[i].bits === state.bits ? "#ffcf70" : "#ffe7b3",
+        stroke: rows[i].bits === state.bits ? "#b06000" : "none"
+      }));
+      svg.appendChild(el("text", { x: center, y: yBytes(rows[i].perParam) - 5, class: "tick", "text-anchor": "middle" }, rows[i].perParam.toFixed(2)));
+      points.push([center, yMse(Math.max(rows[i].mse, mseMin / 2))]);
+    }
+    svg.appendChild(el("path", { d: "M" + points.map(function (p) { return p[0].toFixed(1) + " " + p[1].toFixed(1); }).join("L"), class: "step" }));
+    points.forEach(function (p) { svg.appendChild(el("circle", { cx: p[0], cy: p[1], r: 4, fill: "#1967d2" })); });
+  }
+
+  function fillMetrics(stats, store, result) {
+    var rows = [
+      ["均方误差 MSE", fmt(stats.mse, 6)],
+      ["平均绝对误差", fmt(stats.mae, 6)],
+      ["最大误差", fmt(stats.maxError, 6)],
+      ["信噪比 SQNR", stats.sqnr === Infinity ? "∞ dB" : stats.sqnr.toFixed(1) + " dB"],
+      ["截断权重", stats.clipped + " / " + result.restored.length],
+      ["scale 组数", String(result.groups.length)],
+      ["字节 / 参数", store.perParam.toFixed(3)],
+      ["相对 FP32", store.ratio.toFixed(2) + "×"]
+    ];
+    els.metrics.innerHTML = rows.map(function (row) {
+      return "<div><dt>" + row[0] + "</dt><dd>" + row[1] + "</dd></div>";
+    }).join("");
+    els.metricsExplain.textContent = stats.clipped > 0
+      ? "有 " + stats.clipped + " 个权重超出编码范围被截断：调大校准范围可以消掉截断，代价是阶梯变粗。"
+      : "没有权重被截断；此时校准范围越宽阶梯越粗，误差主要由量化步长决定。";
+  }
+
+  function fillStorage(store, values) {
+    var rows = [
+      ["整数载荷 " + state.bits + " bit × " + values.length, store.payload.toFixed(2) + " B"],
+      ["FP32 scale × " + store.groups + " 组", store.scaleBytes + " B"],
+      ["零点 × " + (state.mode === "asymmetric" ? store.groups : 0) + " 组", store.zeroBytes + " B"],
+      ["量化合计", store.total.toFixed(2) + " B"],
+      ["FP32 基线", (values.length * 4) + " B"],
+      ["压缩比", store.ratio.toFixed(2) + "×"]
+    ];
+    els.storage.innerHTML = rows.map(function (row) {
+      return "<div><dt>" + row[0] + "</dt><dd>" + row[1] + "</dd></div>";
+    }).join("");
+    els.storageExplain.textContent = "分组越细误差越小，但每组都要存 FP32 scale：" + state.bits + " bit 载荷本身只要 " + (state.bits / 8).toFixed(3) + " 字节/参数，开销全在元数据上。";
+  }
+
+  function fillChain(values, result) {
+    var index = Math.min(selected, values.length - 1), offset = 0, group = result.groups[0], local = 0, i;
+    for (i = 0; i < result.groups.length; i += 1) {
+      if (index < offset + result.groups[i].size) { group = result.groups[i]; local = index - offset; break; }
+      offset += result.groups[i].size;
+    }
+    var encoding = group.encodings[local];
+    var error = group.encodings[local].restored - values[index];
+    els.chainTitle.textContent = "选中权重的计算链（第 " + (index + 1) + " 个，第 " + (result.groups.indexOf(group) + 1) + " 组）";
+    els.chain.innerHTML = [
+      "<span>x =</span> <b>" + fmt(values[index], 6) + "</b>",
+      "<span>s =</span> <b>" + fmt(group.scale, 6) + "</b> ｜ <span>z =</span> <b>" + group.zeroPoint + "</b> ｜ <span>码域 =</span> <b>" + group.range.min + "…" + group.range.max + "</b>",
+      "<span>x / s + z =</span> <b>" + fmt(encoding.raw, 4) + "</b> → <span>取整</span> <b>" + encoding.rounded + "</b> → <span>截断后 q =</span> <b>" + encoding.code + "</b>",
+      "<span>x̂ = (q − z) × s =</span> <b>" + fmt(encoding.restored, 6) + "</b>",
+      "<span>误差 =</span> <b>" + fmt(error, 6) + "</b> ｜ <span>" + (encoding.clipped ? "超出范围，已截断" : "未截断") + "</span>"
+    ].join("<br>");
+  }
+
+  function makeSelector(index) {
+    return function () { selected = index; render(); };
+  }
+
+  function render() {
+    syncLabels();
+    readState();
+    var values = QUANT.makeWeights(state.shape, state.count, state.seed);
+    selected = Math.min(selected, values.length - 1);
+    var result = QUANT.quantizeAll(values, currentOptions());
+    var stats = QUANT.metrics(values, result.restored, result.clipped.filter(Boolean).length);
+    var store = QUANT.storage(state.bits, values.length, state.groupSize, state.mode);
+    drawStairs(values, result, stats);
+    drawErrors(values, result);
+    drawSweep(values, stats);
+    fillMetrics(stats, store, result);
+    fillStorage(store, values);
+    fillChain(values, result);
+    els.status.textContent = values.length + " 个权重，" + result.groups.length + " 组，每组 " + result.groups[0].range.levels + " 级编码";
+    els.stairsExplain.textContent = state.gain > 1.15
+      ? "校准范围被放宽：" + state.gain.toFixed(2) + "× 让阶梯间距变大，未截断的权重误差整体上移。"
+      : state.gain < 0.85
+        ? "校准范围被收窄：" + state.gain.toFixed(2) + "× 让阶梯更密，但超出范围的离群值会被压到端点。"
+        : "阶梯间距就是量化步长 s，点离对角线越远说明这个权重的还原误差越大。";
+  }
+
+  ["bits","mode","group","gain","shape","count","round"].forEach(function (id) {
+    els[id].addEventListener("input", render);
+    els[id].addEventListener("change", render);
+  });
+  els.resample.addEventListener("click", function () { state.seed = (state.seed * 1103515245 + 12345) % 2147483647; render(); });
+  els.reset.addEventListener("click", function () {
+    state = Object.assign({}, DEFAULTS);
+    selected = 0;
+    els.bits.value = String(DEFAULTS.bits);
+    els.mode.value = DEFAULTS.mode;
+    els.group.value = String(DEFAULTS.groupSize);
+    els.gain.value = String(DEFAULTS.gain);
+    els.shape.value = DEFAULTS.shape;
+    els.count.value = String(DEFAULTS.count);
+    els.round.value = DEFAULTS.roundMode;
+    render();
+  });
+  els.nextWeight.addEventListener("click", function () { selected = (selected + 1) % state.count; render(); });
+  render();
+})();
+</script>
+</body>
+</html>
