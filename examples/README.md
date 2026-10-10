@@ -13,7 +13,6 @@ These tools also validate the extraction and generation flow of the skill. Every
 | `logistic-regression` | New | Parameters, threshold, training state, probability curve and metrics staying in sync |
 | `svm` | New | Linear/RBF decision boundaries, support vectors, C/gamma, KKT conditions, held-out metrics |
 | `quantization` | New | Bit width, scale, zero point, group scaling, error and weight storage estimates |
-| `quantization-v2` | New | One tensor through the whole linear-quantization chain: staircase, per-group scales, error bins, bit-width sweep, storage bill |
 | `lora` | New | Frozen weights, low-rank matrices, gradient training, parameter counts, merge consistency |
 | `rnn-lstm` | New | Time steps, gates, state passing, early-input sensitivity |
 | `object-detection-dataset-viewer` | New unified entry | Offline links to the three formats, language switching, narrow-screen layout |
