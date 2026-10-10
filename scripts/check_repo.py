@@ -12,8 +12,11 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 SKILL = ROOT / "skills" / "w-interactive-demo"
 EXAMPLES = ROOT / "examples"
-LANGUAGE_SWITCH = "**English** | [中文](#中文说明)"
-CHINESE_HEADING = "## 中文说明"
+SWITCH_EN = "**English** | [简体中文](README.zh-CN.md)"
+SWITCH_ZH = "[English](README.md) | **简体中文**"
+CJK = re.compile(r"[\u3400-\u9fff]")
+ENGLISH_CJK_LIMIT = 40  # on-page labels and source names stay in Chinese
+CHINESE_CJK_MINIMUM = 100
 
 
 class ResourceParser(HTMLParser):
@@ -95,23 +98,37 @@ def main() -> int:
                 if clean_target and not (directory / clean_target).exists():
                     fail(f"Broken example link in {html.relative_to(ROOT)}: {target}")
 
-    readmes = [ROOT / "README.md", EXAMPLES / "README.md"] + [directory / "README.md" for directory in example_dirs]
-    for path in readmes:
-        if not path.is_file():
-            fail(f"Missing README: {path.relative_to(ROOT)}")
+    readme_dirs = [ROOT, EXAMPLES] + example_dirs
+    readmes: list[Path] = []
+    for directory in readme_dirs:
+        english = directory / "README.md"
+        chinese = directory / "README.zh-CN.md"
+        relative_dir = directory.relative_to(ROOT)
+        if not english.is_file():
+            fail(f"Missing README.md: {relative_dir}")
+        if not chinese.is_file():
+            fail(f"Missing README.zh-CN.md: {relative_dir}")
             continue
-        text = path.read_text(encoding="utf-8")
-        switch = text.find(LANGUAGE_SWITCH)
-        chinese = text.find(CHINESE_HEADING)
-        if switch < 0:
-            fail(f"README without the English-first language switch line: {path.relative_to(ROOT)}")
-        if chinese < 0:
-            fail(f"README without the '{CHINESE_HEADING}' section: {path.relative_to(ROOT)}")
-        if switch >= 0 and chinese >= 0 and switch > chinese:
-            fail(f"README must open in English before the Chinese section: {path.relative_to(ROOT)}")
-        if chinese >= 0 and not re.search(r"[\u4e00-\u9fff]", text[chinese + len(CHINESE_HEADING):]):
-            fail(f"README Chinese section holds no Chinese text: {path.relative_to(ROOT)}")
-
+        readmes += [english, chinese]
+        texts = {english: english.read_text(encoding="utf-8"), chinese: chinese.read_text(encoding="utf-8")}
+        if SWITCH_EN not in texts[english]:
+            fail(f"README.md without a switch line to README.zh-CN.md: {relative_dir}")
+        elif texts[english].index(SWITCH_EN) > 200:
+            fail(f"README.md switch line must sit under the title: {relative_dir}")
+        if SWITCH_ZH not in texts[chinese]:
+            fail(f"README.zh-CN.md without a switch line back to README.md: {relative_dir}")
+        english_cjk = len(CJK.findall(texts[english].replace(SWITCH_EN, "")))
+        if english_cjk > ENGLISH_CJK_LIMIT:
+            fail(f"README.md is not the English copy ({english_cjk} Chinese characters): {relative_dir}")
+        if len(CJK.findall(texts[chinese])) < CHINESE_CJK_MINIMUM:
+            fail(f"README.zh-CN.md is not the Chinese copy: {relative_dir}")
+        for path, text in texts.items():
+            for target in re.findall(r"\[[^\]]*\]\(([^)]+)\)", text):
+                if "://" in target or target.startswith(("#", "mailto:")):
+                    continue
+                clean_target = target.split("#", 1)[0]
+                if clean_target and not (path.parent / clean_target).exists():
+                    fail(f"Broken README link in {path.relative_to(ROOT)}: {target}")
     forbidden_names = {"node_modules", ".verification", "playwright-report", "test-results"}
     for path in ROOT.rglob("*"):
         if ".git" not in path.parts and path.name in forbidden_names:
@@ -123,7 +140,7 @@ def main() -> int:
             print(f"- {error}")
         return 1
 
-    print(f"Repository check passed: 1 skill, {len(example_dirs)} examples, {len(readmes)} bilingual READMEs, no external HTML resources.")
+    print(f"Repository check passed: 1 skill, {len(example_dirs)} examples, {len(readmes)} READMEs in 2 languages, no external HTML resources.")
     return 0
 
 
