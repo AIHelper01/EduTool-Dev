@@ -12,8 +12,9 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 SKILL = ROOT / "skills" / "w-interactive-demo"
 EXAMPLES = ROOT / "examples"
-SWITCH_EN = "**English** | [简体中文](README.zh-CN.md)"
-SWITCH_ZH = "[English](README.md) | **简体中文**"
+SWITCH_EN = "**English** | [简体中文]({file})"
+SWITCH_ZH = "[English]({file}) | **简体中文**"
+DOCUMENTATION_BASENAMES = ("CONTRIBUTING", "THIRD_PARTY_NOTICES")
 CJK = re.compile(r"[\u3400-\u9fff]")
 ENGLISH_CJK_LIMIT = 40  # on-page labels and source names stay in Chinese
 CHINESE_CJK_MINIMUM = 100
@@ -98,37 +99,42 @@ def main() -> int:
                 if clean_target and not (directory / clean_target).exists():
                     fail(f"Broken example link in {html.relative_to(ROOT)}: {target}")
 
-    readme_dirs = [ROOT, EXAMPLES] + example_dirs
+    pairs: list[tuple[Path, Path, str]] = []
+    for directory in [ROOT, EXAMPLES] + example_dirs:
+        label = str(directory.relative_to(ROOT))
+        pairs.append((directory / "README.md", directory / "README.zh-CN.md", label))
+    for basename in DOCUMENTATION_BASENAMES:
+        pairs.append((ROOT / f"{basename}.md", ROOT / f"{basename}.zh-CN.md", basename))
+
     readmes: list[Path] = []
-    for directory in readme_dirs:
-        english = directory / "README.md"
-        chinese = directory / "README.zh-CN.md"
-        relative_dir = directory.relative_to(ROOT)
+    for english, chinese, label in pairs:
         if not english.is_file():
-            fail(f"Missing README.md: {relative_dir}")
+            fail(f"Missing {english.name}: {label}")
         if not chinese.is_file():
-            fail(f"Missing README.zh-CN.md: {relative_dir}")
+            fail(f"Missing {chinese.name}: {label}")
             continue
         readmes += [english, chinese]
+        switch_en = SWITCH_EN.format(file=chinese.name)
+        switch_zh = SWITCH_ZH.format(file=english.name)
         texts = {english: english.read_text(encoding="utf-8"), chinese: chinese.read_text(encoding="utf-8")}
-        if SWITCH_EN not in texts[english]:
-            fail(f"README.md without a switch line to README.zh-CN.md: {relative_dir}")
-        elif texts[english].index(SWITCH_EN) > 200:
-            fail(f"README.md switch line must sit under the title: {relative_dir}")
-        if SWITCH_ZH not in texts[chinese]:
-            fail(f"README.zh-CN.md without a switch line back to README.md: {relative_dir}")
-        english_cjk = len(CJK.findall(texts[english].replace(SWITCH_EN, "")))
+        if switch_en not in texts[english]:
+            fail(f"{english.name} without a switch line to {chinese.name}: {label}")
+        elif texts[english].index(switch_en) > 200:
+            fail(f"{english.name} switch line must sit under the title: {label}")
+        if switch_zh not in texts[chinese]:
+            fail(f"{chinese.name} without a switch line back to {english.name}: {label}")
+        english_cjk = len(CJK.findall(texts[english].replace(switch_en, "")))
         if english_cjk > ENGLISH_CJK_LIMIT:
-            fail(f"README.md is not the English copy ({english_cjk} Chinese characters): {relative_dir}")
+            fail(f"{english.name} is not the English copy ({english_cjk} Chinese characters): {label}")
         if len(CJK.findall(texts[chinese])) < CHINESE_CJK_MINIMUM:
-            fail(f"README.zh-CN.md is not the Chinese copy: {relative_dir}")
+            fail(f"{chinese.name} is not the Chinese copy: {label}")
         for path, text in texts.items():
             for target in re.findall(r"\[[^\]]*\]\(([^)]+)\)", text):
                 if "://" in target or target.startswith(("#", "mailto:")):
                     continue
                 clean_target = target.split("#", 1)[0]
                 if clean_target and not (path.parent / clean_target).exists():
-                    fail(f"Broken README link in {path.relative_to(ROOT)}: {target}")
+                    fail(f"Broken documentation link in {path.relative_to(ROOT)}: {target}")
     forbidden_names = {"node_modules", ".verification", "playwright-report", "test-results"}
     for path in ROOT.rglob("*"):
         if ".git" not in path.parts and path.name in forbidden_names:
@@ -140,7 +146,7 @@ def main() -> int:
             print(f"- {error}")
         return 1
 
-    print(f"Repository check passed: 1 skill, {len(example_dirs)} examples, {len(readmes)} READMEs in 2 languages, no external HTML resources.")
+    print(f"Repository check passed: 1 skill, {len(example_dirs)} examples, {len(pairs)} documents in 2 languages, no external HTML resources.")
     return 0
 
 

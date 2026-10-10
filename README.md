@@ -98,4 +98,4 @@ python scripts/check_repo.py
 
 Project-owned code and documentation use the [MIT License](LICENSE). Tools extracted from third-party pages stay under their own source terms; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-Every README in this repository ships in two files: `README.md` in English and `README.zh-CN.md` in 简体中文.
+Every document in this repository ships in two files: `README.md`, `CONTRIBUTING.md` and `THIRD_PARTY_NOTICES.md` in English, with `*.zh-CN.md` holding the 简体中文 copy.

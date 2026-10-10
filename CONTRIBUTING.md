@@ -1,25 +1,27 @@
-# 参与贡献
+# Contributing
 
-欢迎改进 skill 或添加新的教学演示。请让每次修改保持一个清楚的目的，并在提交前运行：
+**English** | [简体中文](CONTRIBUTING.zh-CN.md)
+
+Improvements to the skill and new teaching demos are welcome. Keep each change focused on one clear purpose, and run this before committing:
 
 ```bash
 python scripts/check_repo.py
 ```
 
-## 修改 skill
+## Changing the skill
 
-通用路由、默认约定和完成标准放在 `skills/w-interactive-demo/SKILL.md`。只有提取流程需要的细节放在 `references/extract.md`，新建工具的设计与数学约束放在 `references/create.md`，共同的视觉与交付约定放在 `references/style-and-delivery.md`。
+General routing, default conventions and the definition of done live in `skills/w-interactive-demo/SKILL.md`. Details needed only by the extraction flow go in `references/extract.md`, design and maths constraints for new tools go in `references/create.md`, and shared visual and delivery conventions go in `references/style-and-delivery.md`.
 
-避免把某一个案例的偶然实现写成所有主题必须遵守的规则。加入严格要求时，应能说明它防止了什么具体错误。
+Do not turn an incidental choice from one tool into a rule every topic must follow. When you add a strict requirement, be able to name the concrete mistake it prevents.
 
-## 添加案例
+## Adding a case
 
-新案例放在 `examples/<topic>/`，至少包含：
+New cases go in `examples/<topic>/` and contain at least:
 
-- `index.html`：可直接通过 `file://` 打开；
-- `README.md`＋`README.zh-CN.md`：中英双语两个文件，默认英文，各自一级标题下放一行语言切换；内容上说明操作方法、来源、改动和限制；
-- 仅在实际需要时加入 `assets/` 或 `licenses/`。
+- `index.html`: opens directly over `file://`;
+- `README.md` plus `README.zh-CN.md`: one file per language, English by default, each with a language switch line under its title; the content covers controls, provenance, changes and limits;
+- `assets/` or `licenses/` only when actually needed.
 
-提交前应在新的浏览器上下文中阻断 HTTP(S) 请求，实际操作主要控件，核对核心数值关系，并查看桌面和窄屏截图。若案例无法完全离线，README 必须准确说明依赖。
+Before committing, block HTTP(S) requests in a fresh browser context, drive the main controls, check the core numeric relationships, and review desktop and narrow-screen screenshots. If a case cannot run fully offline, its README must state the dependency accurately.
 
-从网页提取的案例不得移除原代码中必须保留的版权声明。仓库根目录的 MIT License 只覆盖本项目自有内容，不会改变第三方内容的许可。
+Extracted cases must not remove copyright notices that the original code requires to be kept. The MIT License at the repository root covers only this project's own content and never changes the licence of third-party material.

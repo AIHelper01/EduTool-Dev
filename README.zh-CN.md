@@ -96,6 +96,6 @@ EduTool-Dev/
 python scripts/check_repo.py
 ```
 
-项目自有代码和文档采用 [MIT License](LICENSE)。从第三方页面提取的工具仍受各自来源条款约束，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+项目自有代码和文档采用 [MIT License](LICENSE)。从第三方页面提取的工具仍受各自来源条款约束，详见 [THIRD_PARTY_NOTICES.zh-CN.md](THIRD_PARTY_NOTICES.zh-CN.md)。
 
-本仓库所有 README 均为中英双语两个文件：英文 `README.md`，简体中文 `README.zh-CN.md`。
+本仓库所有文档均为中英双语两个文件：英文 `README.md`／`CONTRIBUTING.md`／`THIRD_PARTY_NOTICES.md`，简体中文为对应的 `*.zh-CN.md`。
