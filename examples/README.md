@@ -12,6 +12,7 @@
 | `quantization` | 新建 | 位宽、scale、零点、分组缩放、误差与权重存储估算 |
 | `lora` | 新建 | 冻结权重、低秩矩阵、梯度训练、参数量与权重合并一致性 |
 | `rnn-lstm` | 新建 | 时间步、门控、状态传递与早期输入敏感度 |
+| `kmeans-clustering` | 从网页提取 | 初始化方式、逐步分配与更新中心、质心与 Voronoi 区域 |
 
 | `object-detection-dataset-viewer` | 新建统一入口 | 三种格式的离线跳转、中英文切换和窄屏布局 |
 | `yolo-dataset-viewer` | 从网页提取 | 本地文件读取、检测框坐标、缩放、拖动与离线运行 |

@@ -25,3 +25,13 @@ Google 机器学习教育内容的复用说明见 [Can I reuse content from Mach
 保留原工具组件与所需 React 运行时，离线化改动与限制见各工具 README。原组件和站点样式未确认独立开放许可，仍受原作者条款约束，不纳入本项目自有代码的 MIT 授权。React / React DOM / Scheduler / JSX 运行时许可保留在各目录的 `licenses/React-LICENSE.txt`。
 
 `examples/object-detection-dataset-viewer` 是本项目新制作的统一导航入口，按 MIT License 提供。
+
+## K-Means 聚类分步演示
+
+`examples/kmeans-clustering` 提取自 Naftali Harris 的博文页面，提取日期为 2026-10-10：
+
+| 工具 | 原始页面 |
+| --- | --- |
+| `examples/kmeans-clustering` | [Visualizing K-Means Clustering](https://www.naftaliharris.com/blog/visualizing-k-means-clustering/) |
+
+原页面页脚版权为 © Naftali Harris, 2012-2023，未标注独立的开放许可，因此该目录内来自原页面的脚本仍归原作者并受其条款约束，不纳入本项目自有代码的 MIT 授权。内联的 d3.v3 为 Mike Bostock 作品，按 ISC／BSD-3-Clause 提供，声明见 `examples/kmeans-clustering/licenses/d3-LICENSE.txt`。离线化改动与署名说明见该工具 README。
