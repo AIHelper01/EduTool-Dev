@@ -798,7 +798,7 @@
       <section class="category-section" id="large-language-models" aria-labelledby="large-language-models-title">
         <div class="category-heading">
           <div class="category-title"><span class="category-symbol">LLM</span><h3 id="large-language-models-title">大语言模型</h3></div>
-          <p>3 个本地工具 · 5 个在线工具</p>
+          <p>4 个本地工具 · 5 个在线工具</p>
         </div>
         <div class="tool-grid">
           <article class="tool-card">
@@ -866,6 +866,10 @@
           <article class="tool-card">
             <div class="preview" aria-hidden="true"><svg viewBox="0 0 340 170"><g stroke="#dadce0"><path d="M35 25 V140 H310" fill="none"/></g><path d="M45 130 H80 V110 H115 V90 H150 V70 H185 V50 H220 V30 H290" fill="none" stroke="#1967d2" stroke-width="4"/><path d="M45 135 L290 25" stroke="#9aa0a6" stroke-width="2" stroke-dasharray="5 5"/><g fill="#9334e6"><circle cx="95" cy="110" r="5"/><circle cx="165" cy="70" r="5"/><circle cx="250" cy="30" r="5"/></g></svg></div>
             <div class="tool-body"><span class="kind">新建工具</span><h3>模型量化可视化</h3><p>拆解浮点数的符号、指数与尾数字段，比较 FP16 与 BF16，观察整数量化的误差和权重存储变化。</p><a class="open-tool" href="./examples/quantization/index.html">打开工具</a></div>
+          </article>
+          <article class="tool-card">
+            <div class="preview" aria-hidden="true"><svg viewBox="0 0 340 170"><g stroke="#dadce0"><path d="M35 22 V140 H312" fill="none"/></g><path d="M45 138 L295 28" stroke="#9aa0a6" stroke-width="2" stroke-dasharray="5 5"/><path d="M45 132 H86 V112 H127 V92 H168 V72 H209 V52 H250 V32 H295" fill="none" stroke="#1967d2" stroke-width="3" stroke-linejoin="round"/><g stroke="#5f6368" stroke-width="2"><path d="M110 109 L118 112"/><path d="M250 48 L268 32"/></g><circle cx="110" cy="109" r="6" fill="#9334e6" stroke="#fff" stroke-width="2"/><rect x="112" y="106" width="12" height="12" rx="2" fill="#f9ab00" stroke="#fff" stroke-width="2"/><circle cx="250" cy="48" r="6" fill="#9334e6" stroke="#fff" stroke-width="2"/><rect x="262" y="26" width="12" height="12" rx="2" fill="#f9ab00" stroke="#fff" stroke-width="2"/><text x="252" y="157" fill="#5f6368" font-size="11" font-family="Consolas, monospace">2-8 bit</text></svg></div>
+            <div class="tool-body"><span class="kind">新建工具</span><h3>模型量化可视化 v2</h3><p>把一个权重张量走完线性量化全链路：调位宽、对称性、分组与校准范围，看量化阶梯、误差分布、位宽扫描和存储开销怎样一起变化。</p><a class="open-tool" href="./examples/quantization-v2/index.html">打开工具</a></div>
           </article>
           <article class="tool-card">
             <div class="preview" aria-hidden="true"><svg viewBox="0 0 340 170"><rect x="25" y="40" width="90" height="90" rx="5" fill="#e8eaed" stroke="#9aa0a6"/><text x="70" y="92" text-anchor="middle" fill="#5f6368" font-size="24">W₀</text><text x="133" y="93" fill="#5f6368" font-size="26">+</text><rect x="163" y="40" width="30" height="90" rx="4" fill="#f3e8fd" stroke="#9334e6"/><text x="178" y="92" text-anchor="middle" fill="#9334e6" font-size="18">B</text><text x="211" y="93" fill="#5f6368" font-size="24">×</text><rect x="238" y="70" width="78" height="30" rx="4" fill="#f3e8fd" stroke="#9334e6"/><text x="277" y="92" text-anchor="middle" fill="#9334e6" font-size="18">A</text></svg></div>
@@ -1002,7 +1006,9 @@
   <script>
     const translations = {
       "2 个本地工具 · 4 个在线工具": "2 local tools \u00b7 4 online tools",
-      "3 个本地工具 · 5 个在线工具": "3 local tools \u00b7 5 online tools",
+      "4 个本地工具 · 5 个在线工具": "4 local tools \u00b7 5 online tools",
+      "模型量化可视化 v2": "Model quantization visualization v2",
+      "把一个权重张量走完线性量化全链路：调位宽、对称性、分组与校准范围，看量化阶梯、误差分布、位宽扫描和存储开销怎样一起变化。": "Take one weight tensor through linear quantization end to end. Adjust bit width, symmetry, grouping and calibration range while the staircase, error spread, bit sweep and storage cost change together.",
       "RNN 与 LSTM 可视化": "RNN and LSTM visualization",
       "逐步对比序列中的记忆传递，调节遗忘、输入与输出门，观察隐藏状态、细胞状态和早期输入的影响。": "Compare memory across a sequence, adjust forget, input and output gates, and explore hidden states, cell states and early-input sensitivity.",
       "LoRA Illustrated 本地版": "LoRA Illustrated (local version)",

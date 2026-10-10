@@ -9,7 +9,7 @@
 双击仓库根目录的 [`index.html`](index.html) 可以打开工具主页，并从卡片进入现有工具。
 主页右上角提供 English / 中文切换按钮，切换导航、分类和工具介绍，并在浏览器允许本地存储时记住语言选择。主页与目标检测数据集统一入口均支持中英文，各演示内部保持原有语言。
 这个入口不依赖构建步骤，也可以直接从仓库根目录发布到 GitHub Pages。
-主页按数据工具、机器学习、深度学习、大语言模型、计算机视觉、模型评测和强化学习组织；机器学习和深度学习分类提供七个本地教学工具，计算机视觉分类提供目标检测数据集查看器合集（YOLO、COCO、VOC），大语言模型分类新增量化与两个 LoRA 版本共三个本地演示，并收录 GeoGebra、TensorFlow Playground、LSTM Simulator、GAN Lab、CNN Explainer、Transformer Explainer、Arena、LiveBench 等在线互动资源。
+主页按数据工具、机器学习、深度学习、大语言模型、计算机视觉、模型评测和强化学习组织；机器学习和深度学习分类提供七个本地教学工具，计算机视觉分类提供目标检测数据集查看器合集（YOLO、COCO、VOC），大语言模型分类新增两个量化版本与两个 LoRA 版本共四个本地演示，并收录 GeoGebra、TensorFlow Playground、LSTM Simulator、GAN Lab、CNN Explainer、Transformer Explainer、Arena、LiveBench 等在线互动资源。
 
 ## 能做什么
 
@@ -58,6 +58,7 @@ Copy-Item -Recurse -Force ".\skills\w-interactive-demo" (Join-Path $codexRoot "s
 | [RNN 与 LSTM 可视化](examples/rnn-lstm/) | 新建工具 | 序列记忆、门控、状态与敏感度 |
 | [LoRA Illustrated 本地版](examples/lora-illustrated/) | 网页提取 | 矩阵编辑、rank、缩放与悬停关联 |
 | [模型量化可视化](examples/quantization/) | 新建工具 | S/E/M、FP16/BF16、量化误差与权重存储 |
+| [模型量化可视化 v2](examples/quantization-v2/) | 新建工具 | 线性量化完整链路：量化阶梯、分组 scale、误差分箱、位宽扫描与存储开销 |
 | [LoRA 低秩适配可视化](examples/lora/) | 新建工具 | 低秩矩阵、冻结权重、训练与合并输出 |
 | [目标检测数据集查看器](examples/object-detection-dataset-viewer/) | 统一入口 | 选择 YOLO、COCO、Pascal VOC 三个离线工具，中英文导航 |
 | [YOLO 数据集查看器](examples/yolo-dataset-viewer/) | 网页提取 | 本地图片与 TXT 检测标注、类别编号、缩放与拖动画布 |

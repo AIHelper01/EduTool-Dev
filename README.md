@@ -9,7 +9,7 @@ The repository ships an installable Codex skill, [`w-interactive-demo`](skills/w
 Double-click [`index.html`](index.html) in the repository root to open the tool homepage and enter any tool from its card.
 The top-right button switches the homepage between English and 中文, covering navigation, categories, and tool descriptions, and remembers the choice when local storage is allowed. The homepage and the object-detection dataset viewer entry are bilingual; each demo keeps its original language inside.
 This entry point needs no build step and can be published to GitHub Pages straight from the repository root.
-The homepage is organised into Data tools, Machine learning, Deep learning, Large language models, Computer vision, Model evaluation, and Reinforcement learning. Machine learning and deep learning provide seven local teaching tools, computer vision provides the object-detection dataset viewer collection (YOLO, COCO, VOC), the large language model category adds quantization plus two LoRA versions, three local demos, and the page also lists online interactive resources such as GeoGebra, TensorFlow Playground, LSTM Simulator, GAN Lab, CNN Explainer, Transformer Explainer, Arena, and LiveBench.
+The homepage is organised into Data tools, Machine learning, Deep learning, Large language models, Computer vision, Model evaluation, and Reinforcement learning. Machine learning and deep learning provide seven local teaching tools, computer vision provides the object-detection dataset viewer collection (YOLO, COCO, VOC), the large language model category adds two quantization versions plus two LoRA versions, four local demos, and the page also lists online interactive resources such as GeoGebra, TensorFlow Playground, LSTM Simulator, GAN Lab, CNN Explainer, Transformer Explainer, Arena, and LiveBench.
 
 ## What it does
 
@@ -58,6 +58,7 @@ After restarting your Codex task, call it with `$w-interactive-demo`. The skill 
 | [RNN and LSTM visualiser](examples/rnn-lstm/) | New tool | Sequence memory, gates, states and early-input sensitivity |
 | [LoRA Illustrated, local version](examples/lora-illustrated/) | Extracted | Matrix editing, rank, scaling and hover relationships |
 | [Model quantization visualiser](examples/quantization/) | New tool | S/E/M, FP16/BF16, quantization error and weight storage |
+| [Model quantization visualiser v2](examples/quantization-v2/) | New tool | Full linear-quantization chain: staircase, per-group scales, error bins, bit-width sweep and storage cost |
 | [LoRA low-rank adaptation visualiser](examples/lora/) | New tool | Low-rank matrices, frozen weights, training and merged output |
 | [Object detection dataset viewer](examples/object-detection-dataset-viewer/) | Unified entry | Choose between the YOLO, COCO and Pascal VOC offline tools, bilingual navigation |
 | [YOLO dataset viewer](examples/yolo-dataset-viewer/) | Extracted | Local images with TXT detection annotations, class indices, zoom and draggable canvas |
