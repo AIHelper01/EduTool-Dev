@@ -1,10 +1,54 @@
-# 模型量化可视化
+# Model Quantization Visualiser
+
+**English** | [中文](#中文说明)
+
+Double-click `index.html`; no network and no dependencies.
+
+Suggested reading order: S/E/M meaning → formats and memory → FP16/BF16 comparison → whole-group quantization experiment → how a single number is computed.
+
+## Controls
+
+- Adjust the S sign, the E true exponent and the 4-bit fractional M, and watch binary scientific notation and the value update together.
+- Compare FP16 / BF16 bit widths side by side with the real ticks over the same interval; enter a number to compare round-to-nearest-even, overflow and subnormal fractions.
+- Switch between 2 / 4 / 8 bit, symmetric / asymmetric quantization, and shared / per-4-weight group scales.
+- Adjust the calibration range and watch the quantization steps, reconstruction error, clipping counts and storage estimate.
+- Enter a decimal or click a weight to see scaling, rounding, integer encoding and reconstruction.
+- Switch floating-point formats to compare sign / exponent / mantissa allocation and theoretical weight footprint.
+
+## Conventions and limits
+
+Uniform linear quantization: `q = clip(roundEven(x / scale) + zeroPoint)`, `x̂ = (q − zeroPoint) × scale`. Midpoints round to even.
+
+Symmetric mode uses `Q = 2^(bit−1)−1`, encoding range `−Q…Q`, `scale = maxAbs × range factor / Q`, zero point 0; the most negative two's-complement code is unused. Asymmetric mode uses unsigned `0…2^bit−1`, the calibration range includes zero, scale is the range width divided by the maximum code, and the zero point is rounded then clamped into the code range. Rounding the zero point shifts the representable endpoints slightly. All-zero groups use scale=1 and still reconstruct zero exactly.
+
+Storage example: packed integer payload plus a 4-byte FP32 scale per group; asymmetric adds a 4-byte integer zero point per group. These are teaching-format estimates, and the browser never actually stores packed weights. Calculations use JavaScript numbers; they do not simulate full encodings of the floating-point formats, real model accuracy, or inference speed. Field lengths in the format diagrams are proportional and not bit-exact encodings.
+
+Weight memory is reported in decimal GB and counts only the selected format's payload. NVFP4 uses an example overhead of one FP8 scale per 16 values (0.5625 bytes per parameter), excluding the tensor-level FP32 scale. Real memory also depends on metadata, activations, KV cache, buffers and more. TF32 is an FP32 compute mode stored in 4 bytes.
+
+## Source
+
+A teaching tool newly built by AIHelper01, informed by the explanation of precision, ranges, scale and memory in the user-supplied 《Untitled 1.md》; no figures were copied from that document, and this is not an extraction of the original WeChat tool.
+
+- [ONNX QuantizeLinear](https://onnx.ai/onnx/operators/onnx__QuantizeLinear.html)
+- [ONNX DequantizeLinear](https://onnx.ai/onnx/operators/onnx__DequantizeLinear.html)
+- [NVIDIA NVFP4 announcement](https://developer.nvidia.com/blog/introducing-nvfp4-for-efficient-and-accurate-low-precision-inference/)
+- [NVIDIA floating-point range and precision table](https://docs.nvidia.com/cuda/archive/13.1.0/cuda-programming-guide/05-appendices/mathematical-functions.html)
+
+FP16 / BF16 comparison conversions round the browser's double-precision input straight into the target format; they do not simulate a prior FP32 conversion, hardware flush-to-zero, or a full training run. The S/E/M demo fixes four fractional bits to explain the fields and does not correspond to one specific real format.
+
+Terminology: M is the stored fractional field; the full significand of a normalised binary number is `1 + fraction`. The page expands binary place values dynamically and explains the bias with FP16's `E = true exponent + 15`. The decimal −12345 is a separate analogy, not an input for the controls below. A subscript ₂ marks binary and a superscript marks a power; special values and subnormal numbers do not follow the implicit-1 normalisation formula.
+
+Numeric checks: `node scripts/check_quantization.cjs`; for the offline browser check add `--browser` (needs a working Playwright and Chrome).
+
+---
+
+## 中文说明
 
 直接双击 `index.html`，无需网络或安装依赖。
 
 阅读顺序：S/E/M 表示 → 格式与显存 → FP16/BF16 对比 → 整组量化实验 → 单个数的计算过程。
 
-## 操作
+### 操作
 
 - 调整 S 符号、E 实际指数、M 四位小数部分，观察二进制科学计数法与数值联动。
 - 并排比较 FP16 / BF16 的位宽与同一区间的真实刻度；输入数字，比较最近偶数舍入、溢出与非规范化小数。
@@ -13,7 +57,7 @@
 - 输入小数或点击权重，查看缩放、舍入、整数编码与还原过程。
 - 切换浮点格式，比较符号 / 指数 / 尾数分配及理论权重占用。
 
-## 计算约定与限制
+### 计算约定与限制
 
 均匀线性量化：`q = clip(roundEven(x / scale) + zeroPoint)`，`x̂ = (q − zeroPoint) × scale`。中点舍入到偶数。
 
@@ -23,7 +67,7 @@
 
 权重显存按十进制 GB，只计所选格式数值本体。NVFP4 使用每 16 个数一个 FP8 scale 的示例开销（0.5625 字节 / 参数），不含 tensor FP32 scale。真实显存还受元数据、激活、KV cache、缓冲等影响。TF32 是 FP32 的计算模式，按 4 字节存储。
 
-## 来源
+### 来源
 
 AIHelper01 新制作的教学工具，参考用户提供的《Untitled 1.md》中精度、范围、scale 与显存的讲解；没有复制文稿配图，也不是微信原站工具的提取版本。
 

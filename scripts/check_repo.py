@@ -12,6 +12,8 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 SKILL = ROOT / "skills" / "w-interactive-demo"
 EXAMPLES = ROOT / "examples"
+LANGUAGE_SWITCH = "**English** | [中文](#中文说明)"
+CHINESE_HEADING = "## 中文说明"
 
 
 class ResourceParser(HTMLParser):
@@ -93,6 +95,23 @@ def main() -> int:
                 if clean_target and not (directory / clean_target).exists():
                     fail(f"Broken example link in {html.relative_to(ROOT)}: {target}")
 
+    readmes = [ROOT / "README.md", EXAMPLES / "README.md"] + [directory / "README.md" for directory in example_dirs]
+    for path in readmes:
+        if not path.is_file():
+            fail(f"Missing README: {path.relative_to(ROOT)}")
+            continue
+        text = path.read_text(encoding="utf-8")
+        switch = text.find(LANGUAGE_SWITCH)
+        chinese = text.find(CHINESE_HEADING)
+        if switch < 0:
+            fail(f"README without the English-first language switch line: {path.relative_to(ROOT)}")
+        if chinese < 0:
+            fail(f"README without the '{CHINESE_HEADING}' section: {path.relative_to(ROOT)}")
+        if switch >= 0 and chinese >= 0 and switch > chinese:
+            fail(f"README must open in English before the Chinese section: {path.relative_to(ROOT)}")
+        if chinese >= 0 and not re.search(r"[\u4e00-\u9fff]", text[chinese + len(CHINESE_HEADING):]):
+            fail(f"README Chinese section holds no Chinese text: {path.relative_to(ROOT)}")
+
     forbidden_names = {"node_modules", ".verification", "playwright-report", "test-results"}
     for path in ROOT.rglob("*"):
         if ".git" not in path.parts and path.name in forbidden_names:
@@ -104,7 +123,7 @@ def main() -> int:
             print(f"- {error}")
         return 1
 
-    print(f"Repository check passed: 1 skill, {len(example_dirs)} examples, no external HTML resources.")
+    print(f"Repository check passed: 1 skill, {len(example_dirs)} examples, {len(readmes)} bilingual READMEs, no external HTML resources.")
     return 0
 
 

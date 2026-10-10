@@ -1,4 +1,16 @@
-# 分类准确率、精确率与召回率（离线版）
+# Classification Accuracy, Precision and Recall (Offline)
+
+**English** | [中文](#中文说明)
+
+Double-click `index.html` and open it in a modern browser such as Edge or Chrome. No installation, no server, no network.
+
+Pick the **Separated**, **Unseparated** or **Imbalanced** dataset and drag the **Classification threshold** to watch the chart, the confusion matrix, and Accuracy, Precision and Recall change together.
+
+This file extracts and packages the interactive script and data from the [corresponding Google Machine Learning Crash Course page](https://developers.google.cn/machine-learning/crash-course/classification/accuracy-precision-recall?hl=zh-cn). The surrounding site navigation is not part of the offline version. Before republishing or redistributing, consult the [course content reuse policy](https://support.google.com/machinelearningeducation/answer/7652594?hl=en) first.
+
+---
+
+## 中文说明
 
 双击 `index.html`，用 Edge、Chrome 等现代浏览器打开。无需安装软件或启动服务器，也无需联网。
 
