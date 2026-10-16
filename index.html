@@ -798,7 +798,7 @@
       <section class="category-section" id="large-language-models" aria-labelledby="large-language-models-title">
         <div class="category-heading">
           <div class="category-title"><span class="category-symbol">LLM</span><h3 id="large-language-models-title">大语言模型</h3></div>
-          <p>3 个本地工具 · 5 个在线工具</p>
+          <p>4 个本地工具 · 5 个在线工具</p>
         </div>
         <div class="tool-grid">
           <article class="tool-card">
@@ -872,6 +872,7 @@
             <div class="tool-body"><span class="kind">新建工具</span><h3>LoRA 低秩适配可视化</h3><p>编辑低秩矩阵 A 与 B，观察冻结权重、训练误差和参数节省，验证合并权重前后的输出一致性。</p><a class="open-tool" href="./examples/lora/index.html">打开工具</a></div>
           </article>
           <article class="tool-card"><div class="preview" aria-hidden="true"><svg viewBox="0 0 340 170"><rect x="35" y="35" width="36" height="100" rx="5" fill="#d1fae5"/><rect x="95" y="70" width="100" height="36" rx="5" fill="#fef3c7"/><text x="80" y="97" fill="#5f6368" font-size="20">×</text><path d="M210 87 H235" stroke="#1967d2" stroke-width="3"/><rect x="245" y="40" width="70" height="90" rx="5" fill="#fed7aa"/><g stroke="white"><path d="M262 40 V130 M280 40 V130 M297 40 V130 M245 62 H315 M245 85 H315 M245 107 H315"/></g></svg></div><div class="tool-body"><span class="kind">网页提取</span><h3>LoRA Illustrated 本地版</h3><p>编辑 A 与 B 矩阵，调节 rank 和更新倍率，通过悬停关联查看低秩乘积与适配后的权重。</p><a class="open-tool" href="./examples/lora-illustrated/index.html">打开工具</a></div></article>
+          <article class="tool-card"><div class="preview" aria-hidden="true"><svg viewBox="0 0 340 170"><g stroke-width="1.4"><rect x="22" y="20" width="120" height="26" rx="6" fill="#e8f0fd" stroke="#a3c5f5"/><rect x="22" y="60" width="120" height="52" rx="6" fill="#f3e8fd" stroke="#9334e6" stroke-width="1.8"/><rect x="22" y="126" width="120" height="26" rx="6" fill="#e6f4ea" stroke="#c8e7d4"/></g><g fill="none" stroke="#9aa0a6" stroke-width="2"><path d="M82 46 V60"/><path d="M82 112 V126"/></g><g fill="#5f6368" font-size="11" font-family="Consolas, monospace"><text x="34" y="37">Input</text><text x="34" y="76">Block x N</text><text x="34" y="143">Output</text></g><g fill="#fff4e0" stroke="#f0cd8a"><rect x="32" y="86" width="32" height="17" rx="4"/><rect x="68" y="86" width="32" height="17" rx="4"/><rect x="104" y="86" width="28" height="17" rx="4"/></g><g fill="#5f6368" font-size="10" font-family="Consolas, monospace"><text x="43" y="99">Q</text><text x="79" y="99">K</text><text x="114" y="99">V</text></g><line x1="178" y1="24" x2="178" y2="146" stroke="#dadce0"/><g><rect x="178" y="38" width="118" height="17" rx="3" fill="#c7cad1"/><rect x="178" y="72" width="46" height="17" rx="3" fill="#9334e6"/><rect x="178" y="106" width="14" height="17" rx="3" fill="#c7cad1"/></g><path d="M142 86 H172" stroke="#9334e6" stroke-width="2" stroke-dasharray="4 4"/><text x="232" y="51" fill="#5f6368" font-size="10" font-family="Consolas, monospace">KV cache</text></svg></div><div class="tool-body"><span class="kind">新建工具</span><h3>大模型层级结构互动演示</h3><p>切换位置编码、注意力、前馈与归一化方案，同步查看层级结构、参数量与每 Token 的 KV 缓存估算。</p><a class="open-tool" href="./examples/llm-architecture-explorer/index.html">打开工具</a></div></article>
         </div>
         <div class="planned">
           <div><strong>下一批演示主题</strong><p>探索知识检索、推理缓存与解码策略，理解大模型生成过程。</p></div>
@@ -1002,11 +1003,13 @@
   <script>
     const translations = {
       "2 个本地工具 · 4 个在线工具": "2 local tools \u00b7 4 online tools",
-      "3 个本地工具 · 5 个在线工具": "3 local tools \u00b7 5 online tools",
+      "4 个本地工具 · 5 个在线工具": "4 local tools · 5 online tools",
       "RNN 与 LSTM 可视化": "RNN and LSTM visualization",
       "逐步对比序列中的记忆传递，调节遗忘、输入与输出门，观察隐藏状态、细胞状态和早期输入的影响。": "Compare memory across a sequence, adjust forget, input and output gates, and explore hidden states, cell states and early-input sensitivity.",
       "LoRA Illustrated 本地版": "LoRA Illustrated (local version)",
       "编辑 A 与 B 矩阵，调节 rank 和更新倍率，通过悬停关联查看低秩乘积与适配后的权重。": "Edit A and B matrices, adjust rank and update scaling, and hover to inspect low-rank products and adapted weights.",
+      "大模型层级结构互动演示": "LLM architecture explorer",
+      "切换位置编码、注意力、前馈与归一化方案，同步查看层级结构、参数量与每 Token 的 KV 缓存估算。": "Switch positional encoding, attention, feed-forward and normalisation choices while the hierarchy, parameter counts and per-token KV-cache estimates update together.",
       "1 个本地工具 · 4 个在线工具": "1 local tool \u00b7 4 online tools",
       "输入序列并逐步观察遗忘门、输入门、输出门及细胞状态与隐藏状态的变化，支持自动播放和导出记录。": "Enter a sequence and step through forget, input and output gates, cell states and hidden states, with playback and session export.",
       "访问 LSTM Simulator": "Visit LSTM Simulator",

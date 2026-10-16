@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>大模型层级结构互动演示</title>
+<style>
+  :root {
+    --ink: #202124;
+    --muted: #5f6368;
+    --line: #dadce0;
+    --surface: #f8f9fa;
+    --purple: #9334e6;
+    --purple-dark: #681da8;
+    --purple-bg: #f3e8fd;
+    --orange: #f9ab00;
+    --orange-dark: #b06000;
+    --orange-bg: #fff4e0;
+    --blue: #1967d2;
+    --blue-dark: #0b4a9c;
+    --blue-bg: #e8f0fd;
+    --green: #188038;
+    --green-bg: #e6f4ea;
+    --mono: Consolas, "Roboto Mono", monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fff; color: var(--ink); font: 16px/1.5 Arial, "Microsoft YaHei", "PingFang SC", sans-serif; }
+  main { max-width: 1440px; margin: 0 auto; padding: 28px 18px 38px; }
+  h1 { margin: 0 0 6px; font-size: 25px; line-height: 1.3; font-weight: 500; }
+  .intro { margin: 0 0 22px; color: var(--muted); }
+  .demo { border: 1px solid var(--line); border-radius: 9px; background: var(--surface); padding: 22px; }
+  .workspace { display: grid; grid-template-columns: minmax(500px, 600px) minmax(0, 1fr); gap: 0 14px; align-items: start; }
+  .workspace > .panel-a, .workspace > .panel-b, .workspace > .col-metrics { grid-column: 1; }
+  .workspace > .col-diagram { grid-column: 2; grid-row: 1 / span 3; position: sticky; top: 12px; }
+  .col-diagram .card { margin-bottom: 0; }
+  .col-diagram .diagram-card { max-height: calc(100vh - 24px); overflow-y: auto; overscroll-behavior: contain; }
+  fieldset { border: 1px solid var(--line); border-radius: 8px; background: #fff; margin: 0 0 14px; padding: 12px 16px 16px; }
+  legend { padding: 0 6px; color: #3c4043; font-size: 14px; }
+  .grid { display: grid; gap: 14px 20px; }
+  .grid.cols2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .preset-row { display: grid; grid-template-columns: minmax(260px, 1fr) auto; gap: 14px; align-items: end; }
+  .control { min-width: 0; }
+  .control-head { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 6px; color: var(--muted); font-size: 14px; }
+  .control-head output { color: var(--ink); font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  select { width: 100%; height: 40px; padding: 0 12px; border: 1px solid #777b81; border-radius: 4px; background: #fff; color: var(--ink); font: inherit; font-size: 15px; }
+  input[type="range"] { width: 100%; margin: 8px 0 2px; accent-color: var(--purple); cursor: pointer; }
+  .range-ends { display: flex; justify-content: space-between; color: var(--muted); font: 12px var(--mono); }
+  .control.is-na { opacity: .42; }
+  .control.is-na input[type="range"] { cursor: not-allowed; }
+  .na-note { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+  button { min-height: 36px; padding: 6px 13px; border-radius: 5px; border: 1px solid #bbb5c6; background: #fff; color: #4e3282; font: inherit; cursor: pointer; }
+  button:hover { background: #f0e7fb; }
+  button.primary { border-color: var(--purple); background: var(--purple); color: #fff; }
+  button.primary:hover { border-color: var(--purple-dark); background: var(--purple-dark); color: #fff; }
+  button[aria-pressed="true"] { border-color: var(--purple); background: var(--purple-bg); color: var(--purple-dark); font-weight: 700; }
+  .metric-btn[aria-pressed="true"] { border-color: var(--purple); background: var(--purple); color: #fff; }
+  .metric-btn[aria-pressed="true"]:hover { border-color: var(--purple-dark); background: var(--purple-dark); color: #fff; }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid #aecbfa; outline-offset: 2px; }
+  .toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 4px 0 16px; }
+  .toolbar-note { color: var(--muted); font-size: 13px; }
+  .card { background: #fff; border-radius: 8px; border: 1px solid #e3e5e8; box-shadow: 0 2px 6px #20212415; padding: 16px 18px; margin-bottom: 14px; }
+  .card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  h2 { margin: 0 0 12px; color: #3c4043; font-size: 18px; font-weight: 400; }
+  .card-head h2 { margin-bottom: 0; }
+  .state-line { color: var(--muted); font-size: 13px; }
+  .state-line strong { color: var(--purple-dark); font-weight: 700; }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; color: var(--muted); font-size: 13px; margin-top: 12px; }
+  .swatch { display: inline-block; width: 11px; height: 11px; margin-right: 5px; border-radius: 3px; border: 1px solid var(--line); vertical-align: -1px; background: #fff; }
+  .swatch.on { background: var(--blue-bg); border-color: #a3c5f5; }
+  .swatch.struct { background: var(--purple-bg); border-color: #d7bdf8; }
+  .swatch.choice { background: var(--orange-bg); border-color: #f0cd8a; }
+  .swatch.off { opacity: .42; }
+  .diagram { display: flex; flex-direction: column; }
+  .layer { border: 1px solid var(--line); border-radius: 10px; background: #fff; padding: 14px 16px 16px; }
+  .layer.core { border: 2px solid #cbb0f0; }
+  .layer-title { margin: 0 0 12px; padding: 8px 10px; border-radius: 6px; background: var(--surface); text-align: center; font-size: 16px; font-weight: 700; color: #3c4043; }
+  .layer-title span { display: block; font-weight: 400; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .node { border: 1px solid var(--line); border-radius: 8px; background: #fff; text-align: center; padding: 9px 10px; font-size: 14px; font-weight: 600; }
+  .node small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .node.on { border-color: #a3c5f5; background: var(--blue-bg); }
+  .node.struct { border-color: #d7bdf8; background: var(--purple-bg); }
+  .node.choice { border-color: #f0cd8a; background: var(--orange-bg); }
+  .node.off { opacity: .42; }
+  .arrow { text-align: center; color: #9aa0a6; font-size: 18px; line-height: 22px; height: 22px; }
+  .repeat { text-align: center; color: var(--purple-dark); font-size: 13px; font-weight: 700; }
+  .group { border: 1px dashed #c9d2dc; border-radius: 9px; padding: 11px 12px 12px; margin-top: 10px; background: #fcfdfe; }
+  .group-title { font-size: 13px; font-weight: 700; color: #3c4043; margin-bottom: 9px; text-align: center; }
+  .group-title em { font-style: normal; color: var(--muted); font-weight: 400; }
+  .row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+  .row3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+  .badge { display: inline-block; margin-top: 5px; padding: 1px 7px; border-radius: 9px; font-size: 11px; font-weight: 700; }
+  .badge.yes { background: var(--purple); color: #fff; }
+  .badge.no { background: #eceff1; color: #7b8794; }
+  .chips { display: flex; gap: 6px; margin-top: 9px; }
+  .chip { flex: 1; min-height: 32px; padding: 5px 4px; font-size: 13px; border-radius: 5px; border: 1px solid var(--line); background: #f4f6f8; color: #3c4043; text-align: center; cursor: pointer; }
+  .chip:hover { background: #eceff3; }
+  .chip[aria-pressed="true"] { border-color: var(--blue); background: var(--blue); color: #fff; font-weight: 700; }
+  .experts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; margin-top: 8px; }
+  .expert { border: 1px solid var(--line); border-radius: 5px; background: #f4f6f8; color: var(--muted); font-size: 12px; text-align: center; padding: 5px 2px; }
+  .expert.hit { border-color: #f0cd8a; background: var(--orange-bg); color: var(--orange-dark); font-weight: 700; }
+  .note { margin: 10px 0 0; color: var(--muted); font-size: 12px; text-align: center; }
+  .bottom { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .bottom .card { margin-bottom: 0; }
+  dl.metrics { margin: 0; }
+  dl.metrics > div { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; border-bottom: 1px solid #eef0f2; padding: 7px 0; }
+  dl.metrics dt { color: var(--muted); font-size: 14px; }
+  dl.metrics dd { margin: 0; font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 15px; }
+  dl.metrics dd.hi { color: var(--purple-dark); font-weight: 700; }
+  .formulas { margin: 0; padding: 0; list-style: none; font-family: var(--mono); font-size: 12.5px; color: #3c4043; }
+  .formulas li { border-bottom: 1px dashed #e8eaed; padding: 6px 0; }
+  .formulas b { color: var(--muted); font-family: Arial, "Microsoft YaHei", sans-serif; font-weight: 400; }
+  .chart-scroll { overflow-x: auto; }
+  .chart-scroll svg { display: block; width: 100%; height: auto; min-width: 540px; }
+  .chart-hint { display: none; margin: 6px 0 0; color: var(--muted); font-size: 12px; }
+  .explain { margin: 12px 0 0; color: var(--muted); font-size: 13px; }
+  footer { margin-top: 18px; color: var(--muted); font-size: 13px; text-align: center; }
+  @media (max-width: 1200px) {
+    main { max-width: 1120px; }
+    .workspace { grid-template-columns: minmax(0, 1fr); }
+    .workspace > .col-diagram { grid-column: auto; grid-row: auto; position: static; }
+    .col-diagram .diagram-card { max-height: none; overflow: visible; }
+  }
+  @media (max-width: 860px) {
+    .grid.cols2, .bottom { grid-template-columns: minmax(0, 1fr); }
+    .preset-row { grid-template-columns: minmax(0, 1fr); }
+    .demo { padding: 14px; }
+    .row3 { grid-template-columns: minmax(0, 1fr); }
+    .card { padding: 13px 13px 15px; }
+    .chart-scroll svg { min-width: 480px; }
+    .chart-hint { display: block; }
+  }
+</style>
+</head><body>
+<main>
+  <h1>大模型层级结构互动演示</h1>
+  <p class="intro">选择位置编码、注意力、前馈与归一化方案，结构图和参数量 / KV 缓存估算同步更新：<span style="font-family:Consolas,monospace">Input Layer → Transformer Block × N → Output Layer</span></p>
+  <section class="demo" aria-label="大模型层级结构演示工具">
+    <div class="workspace">
+      <div class="panel-a">
+
+    <fieldset>
+      <legend>模型预设 · 公开配置近似</legend>
+      <div class="preset-row">
+        <div class="control">
+          <label class="control-head" for="preset"><span>Preset（预设）</span></label>
+          <select id="preset">
+            <option value="transformer2017">Transformer 2017（解码器近似）</option>
+            <option value="gpt2">GPT-2 124M</option>
+            <option value="llama3" selected>LLaMA-3 8B</option>
+            <option value="mixtral">Mixtral 8×7B（MoE）</option>
+            <option value="mlademo">MLA + MoE 教学示例</option>
+            <option value="custom">自定义（不覆盖当前值）</option>
+          </select>
+        </div>
+        <button id="reset" type="button">恢复预设值</button>
+      </div>
+      <p class="na-note" id="preset-note"></p>
+    </fieldset>
+
+    <fieldset>
+      <legend>方案选择 · 结构分支</legend>
+      <div class="grid cols2">
+        <div class="control">
+          <label class="control-head" for="pe"><span>Positional encoding（位置编码）</span></label>
+          <select id="pe">
+            <option value="sine">Sinusoidal PE · 正弦/余弦固定函数</option>
+            <option value="learned">Learned PE · 可学习位置嵌入</option>
+            <option value="rope">RoPE · 在 Attention 内注入</option>
+          </select>
+        </div>
+        <div class="control">
+          <label class="control-head" for="attn"><span>Attention（注意力实现）</span></label>
+          <select id="attn">
+            <option value="mha">MHA · 每头独立 K/V</option>
+            <option value="mqa">MQA · 全部头共享 1 组 K/V</option>
+            <option value="gqa">GQA · 分组共享 K/V</option>
+            <option value="mla">MLA · 压缩潜变量 K/V</option>
+          </select>
+        </div>
+        <div class="control">
+          <label class="control-head" for="norm"><span>Normalization（归一化）</span></label>
+          <select id="norm">
+            <option value="ln">LayerNorm · 权重 + 偏置</option>
+            <option value="rms">RMSNorm · 仅权重</option>
+          </select>
+        </div>
+        <div class="control">
+          <label class="control-head" for="ffkind"><span>Feed-forward（前馈结构）</span></label>
+          <select id="ffkind">
+            <option value="dense">Dense FFN · 所有 Token 共用</option>
+            <option value="moe">MoE · Router + 多专家</option>
+          </select>
+        </div>
+        <div class="control">
+          <label class="control-head" for="ffform"><span>FFN form（前馈形式）</span></label>
+          <select id="ffform">
+            <option value="standard">标准 FFN · 2 个矩阵</option>
+            <option value="swiglu">SwiGLU · 3 个矩阵（门控）</option>
+          </select>
+        </div>
+        <div class="control">
+          <label class="control-head" for="embtie"><span>LM Head（输出层权重）</span></label>
+          <select id="embtie">
+            <option value="tied">Tied · 复用输入嵌入</option>
+            <option value="untied">Untied · 独立输出矩阵</option>
+          </select>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>模型规模</legend>
+      <div class="grid cols2">
+        <div class="control">
+          <label class="control-head" for="layers"><span>Layers N（层数）</span><output id="layers-value" for="layers">32</output></label>
+          <input id="layers" type="range" min="1" max="80" step="1" value="32" aria-label="层数">
+          <div class="range-ends"><span>1</span><span>80</span></div>
+        </div>
+        <div class="control">
+          <label class="control-head" for="dmodel"><span>d_model（隐藏维）</span><output id="dmodel-value" for="dmodel">4096</output></label>
+          <input id="dmodel" type="range" min="256" max="8192" step="64" value="4096" aria-label="隐藏维">
+          <div class="range-ends"><span>256</span><span>8192</span></div>
+        </div>
+        <div class="control">
+          <label class="control-head" for="heads"><span>Heads H（注意力头数）</span><output id="heads-value" for="heads">32</output></label>
+          <input id="heads" type="range" min="1" max="128" step="1" value="32" aria-label="注意力头数">
+          <div class="range-ends"><span>1</span><span>128</span></div>
+        </div>
+        <div class="control">
+          <label class="control-head" for="dff"><span>d_ff（前馈中间维）</span><output id="dff-value" for="dff">14336</output></label>
+          <input id="dff" type="range" min="128" max="28672" step="128" value="14336" aria-label="前馈中间维">
+          <div class="range-ends"><span>128</span><span>28672</span></div>
+        </div>
+        <div class="control">
+          <label class="control-head" for="vocab"><span>Vocab V（词表大小）</span><output id="vocab-value" for="vocab">128256</output></label>
+          <input id="vocab" type="range" min="2048" max="256000" step="1" value="128256" aria-label="词表大小">
+          <div class="range-ends"><span>2048</span><span>256000</span></div>
+        </div>
+        <div class="control">
+          <label class="control-head" for="ctx"><span>Context L（上下文长度）</span><output id="ctx-value" for="ctx">2048</output></label>
+          <input id="ctx" type="range" min="128" max="32768" step="128" value="2048" aria-label="上下文长度">
+          <div class="range-ends"><span>128</span><span>32768</span></div>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>变体细节 · 仅在对应方案下生效</legend>
+      <div class="grid cols2">
+        <div class="control" id="wrap-kvheads">
+          <label class="control-head" for="kvheads"><span>KV heads H<sub>kv</sub>（GQA 组数）</span><output id="kvheads-value" for="kvheads">8</output></label>
+          <input id="kvheads" type="range" min="1" max="64" step="1" value="8" aria-label="KV 头数">
+          <div class="range-ends"><span>1</span><span>64</span></div>
+        </div>
+        <div class="control" id="wrap-rq">
+          <label class="control-head" for="rq"><span>r<sub>q</sub>（MLA 查询压缩维）</span><output id="rq-value" for="rq">1536</output></label>
+          <input id="rq" type="range" min="128" max="4096" step="64" value="1536" aria-label="查询压缩维">
+          <div class="range-ends"><span>128</span><span>4096</span></div>
+        </div>
+        <div class="control" id="wrap-rkv">
+          <label class="control-head" for="rkv"><span>r<sub>kv</sub>（MLA KV 压缩维）</span><output id="rkv-value" for="rkv">512</output></label>
+          <input id="rkv" type="range" min="64" max="2048" step="64" value="512" aria-label="KV 压缩维">
+          <div class="range-ends"><span>64</span><span>2048</span></div>
+        </div>
+        <div class="control" id="wrap-experts">
+          <label class="control-head" for="experts"><span>Experts E（路由专家数）</span><output id="experts-value" for="experts">8</output></label>
+          <input id="experts" type="range" min="1" max="256" step="1" value="8" aria-label="专家数">
+          <div class="range-ends"><span>1</span><span>256</span></div>
+        </div>
+        <div class="control" id="wrap-topk">
+          <label class="control-head" for="topk"><span>Top-K（每 Token 激活专家）</span><output id="topk-value" for="topk">2</output></label>
+          <input id="topk" type="range" min="1" max="16" step="1" value="2" aria-label="激活专家数">
+          <div class="range-ends"><span>1</span><span>16</span></div>
+        </div>
+      </div>
+      <p class="na-note" id="variant-note"></p>
+    </fieldset>
+      </div>
+
+      <div class="col-diagram">
+        <section class="card diagram-card" aria-label="层级结构图">
+          <div class="card-head"><h2>层级结构图</h2><p class="state-line" id="state-line" aria-live="polite"></p></div>
+          <div class="diagram" id="diagram"></div>
+          <div class="legend" aria-hidden="true">
+            <span><i class="swatch on"></i>当前选中的路径</span>
+            <span><i class="swatch struct"></i>残差 / 归一化骨架</span>
+            <span><i class="swatch choice"></i>可选分支的数值标注</span>
+            <span><i class="swatch off"></i>灰显＝本次未启用</span>
+            <span>MHA / MQA / GQA / MLA 标签可点击</span>
+            <span>右侧面板可独立滚动</span>
+          </div>
+        </section>
+      </div>
+
+      <div class="panel-b">
+    <section class="card" aria-label="方案对比图表">
+      <div class="card-head">
+        <h2>同规模下的方案对比</h2>
+        <div class="toolbar" style="padding:0">
+          <button id="metric-kv" type="button" class="metric-btn" aria-pressed="true">每 Token 每层 KV 缓存</button>
+          <button id="metric-attn" type="button" class="metric-btn" aria-pressed="false">每层注意力参数</button>
+          <button id="metric-ffn" type="button" class="metric-btn" aria-pressed="false">每层前馈参数</button>
+        </div>
+      </div>
+      <div class="chart-scroll" aria-label="可横向滚动的对比柱状图">
+        <svg id="chart" role="img" aria-label="不同注意力或前馈方案的对比柱状图"></svg>
+      </div>
+      <p class="chart-hint">左右滑动图表可查看完整柱形。</p>
+      <p class="explain" id="chart-explain"></p>
+    </section>
+      </div>
+
+      <div class="col-metrics">
+    <div class="bottom">
+      <section class="card" aria-label="估算指标">
+        <h2>估算指标</h2>
+        <dl class="metrics" id="metrics"></dl>
+      </section>
+      <section class="card" aria-label="计算式与约定">
+        <h2>计算式与约定</h2>
+        <ul class="formulas" id="formulas"></ul>
+        <p class="explain">估算按 Pre-Norm 的 Decoder-only 结构计算矩阵权重，不含偏置、Router 之外的额外算子与激活值显存；KV 缓存按 FP16 / BF16 每元素 2 字节。MLA 的头维固定为 128 + 64（可旋转键），缓存 = 压缩潜变量 + 每头可旋转键。数值用于比较数量级，不等同于各模型官方公布值。</p>
+      </section>
+    </div>
+      </div>
+    </div>
+  </section>
+  <footer>工具来源：AIHelper01</footer>
+</main><script>
+  const MLA_DC = 128;
+  const MLA_DR = 64;
+  const BYTES_PER_ELEMENT = 2;
+  const $ = id => document.getElementById(id);
+
+  const presets = {
+    transformer2017: {
+      pe: 'sine', attn: 'mha', norm: 'ln', ffkind: 'dense', ffform: 'standard', embtie: 'tied',
+      layers: 6, dmodel: 512, heads: 8, dff: 2048, vocab: 37000, ctx: 512, kvheads: 8, rq: 1024, rkv: 512, experts: 8, topk: 2,
+      note: '原论文是编码器–解码器结构，这里只搭解码器的自回归主干，并把正弦 PE 放在输入级。论文公布的 65M 还包含编码器与偏置，因此本工具给出的总量会更小。'
+    },
+    gpt2: {
+      pe: 'learned', attn: 'mha', norm: 'ln', ffkind: 'dense', ffform: 'standard', embtie: 'tied',
+      layers: 12, dmodel: 768, heads: 12, dff: 3072, vocab: 50257, ctx: 1024, kvheads: 12, rq: 768, rkv: 512, experts: 8, topk: 2,
+      note: '可学习位置嵌入是一张 L×d 的表，被计入参数；这正是 GPT-2 总量约 124M 的来源之一。'
+    },
+    llama3: {
+      pe: 'rope', attn: 'gqa', norm: 'rms', ffkind: 'dense', ffform: 'swiglu', embtie: 'untied',
+      layers: 32, dmodel: 4096, heads: 32, dff: 14336, vocab: 128256, ctx: 2048, kvheads: 8, rq: 1536, rkv: 512, experts: 8, topk: 2,
+      note: 'GQA 把 K/V 头数从 32 压到 8，注意力参数略降，但每 Token 的 KV 缓存直接降到 1/4。'
+    },
+    mixtral: {
+      pe: 'rope', attn: 'gqa', norm: 'rms', ffkind: 'moe', ffform: 'swiglu', embtie: 'untied',
+      layers: 32, dmodel: 4096, heads: 32, dff: 14336, vocab: 32000, ctx: 2048, kvheads: 8, rq: 1536, rkv: 512, experts: 8, topk: 2,
+      note: '8 个专家全部占用显存（计入总参数），但每个 Token 只经过 Top-2 专家，所以“总量”和“激活量”差距很大。'
+    },
+    mlademo: {
+      pe: 'rope', attn: 'mla', norm: 'rms', ffkind: 'moe', ffform: 'swiglu', embtie: 'untied',
+      layers: 12, dmodel: 5120, heads: 128, dff: 640, vocab: 102400, ctx: 2048, kvheads: 8, rq: 1536, rkv: 512, experts: 64, topk: 8,
+      note: '参考 DeepSeek-V2 的 MLA 与 MoE 设置搭的教学示例：层数、共享专家和第一层稠密替换都做了简化，不是官方完整配置。'
+    }
+  };
+
+  const presetLabels = {
+    transformer2017: 'Transformer 2017（解码器近似）',
+    gpt2: 'GPT-2 124M',
+    llama3: 'LLaMA-3 8B',
+    mixtral: 'Mixtral 8×7B（MoE）',
+    mlademo: 'MLA + MoE 教学示例',
+    custom: '自定义配置'
+  };
+
+  const controls = {
+    pe: $('pe'), attn: $('attn'), norm: $('norm'), ffkind: $('ffkind'), ffform: $('ffform'), embtie: $('embtie'),
+    layers: $('layers'), dmodel: $('dmodel'), heads: $('heads'), dff: $('dff'), vocab: $('vocab'), ctx: $('ctx'),
+    kvheads: $('kvheads'), rq: $('rq'), rkv: $('rkv'), experts: $('experts'), topk: $('topk')
+  };
+  const numericKeys = ['layers', 'dmodel', 'heads', 'dff', 'vocab', 'ctx', 'kvheads', 'rq', 'rkv', 'experts', 'topk'];
+  let currentPreset = 'llama3';
+  let chartMetric = 'kv';
+
+  function state() {
+    const s = {};
+    for (const key of ['pe', 'attn', 'norm', 'ffkind', 'ffform', 'embtie']) s[key] = controls[key].value;
+    for (const key of numericKeys) s[key] = Number(controls[key].value);
+    return s;
+  }
+
+  // 注意力参数与 KV 缓存：按 MHA/MQA/GQA 的投影矩阵，或 MLA 的下投影 + 每头上投影估算。
+  function attentionOf(s, attn, kvHeads) {
+    const headDim = s.dmodel / s.heads;
+    if (attn === 'mla') {
+      const rq = Math.min(s.rq, s.dmodel);
+      const rkv = Math.min(s.rkv, s.dmodel);
+      const params = s.dmodel * rq + rq * s.heads * (MLA_DC + MLA_DR)
+        + s.dmodel * rkv + rkv * s.heads * (MLA_DC + MLA_DR)
+        + s.heads * MLA_DC * s.dmodel;
+      return { params, kvElements: rkv + s.heads * MLA_DR, headDim: MLA_DC, kvHeads: s.heads, latent: rkv, query: rq };
+    }
+    const hkv = attn === 'mha' ? s.heads : attn === 'mqa' ? 1 : Math.max(1, Math.min(kvHeads, s.heads));
+    const params = 2 * s.dmodel * s.heads * headDim + 2 * s.dmodel * hkv * headDim;
+    return { params, kvElements: 2 * hkv * headDim, headDim, kvHeads: hkv, latent: 0, query: 0 };
+  }
+
+  function ffnOf(s, kind, form) {
+    const matrices = form === 'swiglu' ? 3 : 2;
+    const expert = matrices * s.dmodel * s.dff;
+    if (kind === 'moe') {
+      const router = s.dmodel * s.experts;
+      const topk = Math.min(s.topk, s.experts);
+      return { total: s.experts * expert + router, active: topk * expert + router, expert, router, matrices, topk };
+    }
+    return { total: expert, active: expert, expert, router: 0, matrices, topk: 1 };
+  }
+
+  function derive(s) {
+    const attn = attentionOf(s, s.attn, s.kvheads);
+    const ffn = ffnOf(s, s.ffkind, s.ffform);
+    const normUnit = s.norm === 'rms' ? s.dmodel : 2 * s.dmodel;
+    const normPerLayer = 2 * normUnit;
+    const blockTotal = attn.params + ffn.total + normPerLayer;
+    const blockActive = attn.params + ffn.active + normPerLayer;
+    const embedding = s.vocab * s.dmodel;
+    const position = s.pe === 'learned' ? s.ctx * s.dmodel : 0;
+    const lmHead = s.embtie === 'untied' ? s.vocab * s.dmodel : 0;
+    const finalNorm = normUnit;
+    const total = embedding + position + s.layers * blockTotal + finalNorm + lmHead;
+    const active = embedding + position + s.layers * blockActive + finalNorm + lmHead;
+    const kvPerLayer = attn.kvElements * BYTES_PER_ELEMENT;
+    return {
+      attn, ffn, normUnit, normPerLayer, blockTotal, blockActive,
+      embedding, position, lmHead, finalNorm, total, active,
+      kvPerLayer, kvTotal: kvPerLayer * s.layers * s.ctx,
+      flops: 2 * active,
+      headDim: attn.headDim,
+      sparse: s.ffkind === 'moe'
+    };
+  }
+
+  function fmtParams(x) {
+    if (x >= 1e12) return (x / 1e12).toFixed(2) + ' T';
+    if (x >= 1e9) return (x / 1e9).toFixed(2) + ' B';
+    if (x >= 1e6) return (x / 1e6).toFixed(1) + ' M';
+    if (x >= 1e3) return (x / 1e3).toFixed(1) + ' K';
+    return x.toFixed(0);
+  }
+  function fmtBytes(b) {
+    if (b >= 1073741824) return (b / 1073741824).toFixed(2) + ' GB';
+    if (b >= 1048576) return (b / 1048576).toFixed(1) + ' MB';
+    if (b >= 1024) return (b / 1024).toFixed(1) + ' KB';
+    return b.toFixed(0) + ' B';
+  }
+  function fmtFlops(f) {
+    if (f >= 1e12) return (f / 1e12).toFixed(2) + ' TFLOP';
+    if (f >= 1e9) return (f / 1e9).toFixed(2) + ' GFLOP';
+    return (f / 1e6).toFixed(1) + ' MFLOP';
+  }
+  function fmtInt(x) { return x.toLocaleString('en-US'); }
+  function ratio(value, base) {
+    if (!(base > 0) || Math.abs(value - base) / base < 0.02) return '';
+    const trim = x => String(Number(x.toFixed(2)));
+    if (value < base) return '基准的 1/' + trim(base / value);
+    return '基准的 ' + trim(value / base) + ' 倍';
+  }
+</script><script>
+  function badge(active, yesText, noText) {
+    return active
+      ? '<span class="badge yes">' + yesText + '</span>'
+      : '<span class="badge no">' + noText + '</span>';
+  }
+  function box(cls, title, sub) {
+    return '<div class="node ' + cls + '">' + title + (sub ? '<small>' + sub + '</small>' : '') + '</div>';
+  }
+  const ARROW = '<div class="arrow">↓</div>';
+
+  function renderDiagram(s, d) {
+    const a = d.attn;
+    const inputPE = s.pe !== 'rope';
+    const ropeLabel = s.pe === 'rope' ? '施加 RoPE 旋转' : '不施加 RoPE';
+    const kvLabel = s.attn === 'mha' ? 'H<sub>kv</sub> = H = ' + s.heads + ' 组独立 K/V'
+      : s.attn === 'mqa' ? 'H<sub>kv</sub> = 1 · 全部头共享一组 K/V'
+      : s.attn === 'gqa' ? 'H<sub>kv</sub> = ' + a.kvHeads + ' 组 K/V 分组共享'
+      : '每头由 r<sub>kv</sub> 压缩潜变量上投影而来';
+    const qShape = s.attn === 'mla'
+      ? 'W_dq ' + fmtInt(s.dmodel) + '×' + fmtInt(Math.min(s.rq, s.dmodel))
+      : 'W_q ' + fmtInt(s.dmodel) + '×' + fmtInt(s.heads * d.headDim);
+    const kvShape = s.attn === 'mla'
+      ? 'W_dkv ' + fmtInt(s.dmodel) + '×' + fmtInt(Math.min(s.rkv, s.dmodel))
+      : 'W_k / W_v 各 ' + fmtInt(s.dmodel) + '×' + fmtInt(a.kvHeads * d.headDim);
+    const expertShown = Math.min(s.experts, 8);
+    const moePlan = ffnOf(s, 'moe', s.ffform);
+    let expertCells = '';
+    for (let i = 0; i < expertShown; i++) {
+      expertCells += '<div class="expert' + (i < d.ffn.topk ? ' hit' : '') + '">专家 ' + (i + 1) + '</div>';
+    }
+    if (s.experts > expertShown) expertCells += '<div class="expert">+' + (s.experts - expertShown) + ' 个</div>';
+
+    const chips = ['mha', 'mqa', 'gqa', 'mla'].map(v =>
+      '<button type="button" class="chip" data-attn="' + v + '" aria-pressed="' + (s.attn === v) + '">' + v.toUpperCase() + '</button>'
+    ).join('');
+
+    const mlaDetail = s.attn === 'mla'
+      ? '<div class="group"><div class="group-title">MLA 压缩路径 <em>头维固定 ' + MLA_DC + ' + ' + MLA_DR + '</em></div>'
+        + '<div class="row2">'
+        + box('choice', '下投影 d → r<sub>kv</sub>', '每 Token 缓存 ' + fmtInt(Math.min(s.rkv, s.dmodel)) + ' 个数')
+        + box('choice', '上投影 r<sub>kv</sub> → H×(d<sub>c</sub>+d<sub>r</sub>)', fmtInt(s.heads) + ' × ' + (MLA_DC + MLA_DR) + ' 个数')
+        + '</div><p class="note">K/V 只缓存一份压缩潜变量，另外每头保留 ' + MLA_DR + ' 维可旋转键。</p></div>'
+      : '';
+
+    return ''
+      + '<section class="layer"><div class="layer-title">1. Input Layer<span>Text → Tokens → Vectors</span></div>'
+      + box('', '输入文本 → Tokenizer → Token ID', '词表 V = ' + fmtInt(s.vocab))
+      + ARROW
+      + box('on', 'Token Embedding', 'Token ID → 稠密向量 · 查表 V×d = ' + fmtParams(d.embedding))
+      + '<div class="group"><div class="group-title">位置编码 · 输入级 <em>三选一</em></div><div class="row2">'
+      + box(s.pe === 'sine' ? 'on' : 'off', '正弦 / 余弦 PE', '固定函数 · 0 参数 · 原始 Transformer')
+      + box(s.pe === 'learned' ? 'on' : 'off', '可学习位置嵌入', 'L×d 参数表 = ' + fmtParams(d.position) + ' · GPT-2')
+      + '</div>' + ARROW
+      + box(inputPE ? 'choice' : 'off', 'Token Embedding + Position Embedding 相加', inputPE ? '位置信息在进入 Block 前就已写入向量' : '本方案下不在输入级相加')
+      + '<div class="note">' + badge(inputPE, '使用输入级位置编码', '不使用输入级位置编码') + '</div></div>'
+      + '<div class="group"><div class="group-title">替代路线 · RoPE</div>'
+      + box(s.pe === 'rope' ? 'on' : 'off', 'Token Embedding 直接进入 Transformer Block', '位置信息在 Attention 内部注入 · 现代 LLM 主流')
+      + '<div class="note">' + badge(s.pe === 'rope', '当前采用 RoPE 路线', '当前未采用 RoPE 路线') + '</div></div>'
+      + '</section>' + ARROW
+      + '<section class="layer core"><div class="layer-title">2. Transformer Block × ' + s.layers
+      + '<span>每层 ' + fmtParams(d.blockTotal) + (d.sparse ? ' · 激活 ' + fmtParams(d.blockActive) : '') + ' · Attention + 前馈 + 残差</span></div>'
+      + box('struct', 'Normalization · ' + (s.norm === 'rms' ? 'RMSNorm' : 'LayerNorm'), 'Pre-Norm · 每层权重 ' + fmtParams(d.normPerLayer))
+      + ARROW
+      + '<div class="group"><div class="group-title">Multi-Head Self-Attention <em>' + s.attn.toUpperCase() + ' · 每层 ' + fmtParams(a.params) + '</em></div>'
+      + box('', 'Q / K / V 投影', qShape + ' · ' + kvShape)
+      + ARROW
+      + '<div class="row3">'
+      + box('choice', 'Query (Q)', 'H = ' + s.heads + ' · ' + (s.attn === 'mla' ? '每头 ' + MLA_DC + ' + ' + MLA_DR : '头维 ' + trimNum(d.headDim)) + ' · ' + ropeLabel)
+      + box('choice', 'Key (K)', kvLabel + ' · ' + ropeLabel)
+      + box('choice', 'Value (V)', s.attn === 'mla' ? '每头 ' + MLA_DC + ' 维 · 无可旋转键' : 'H<sub>kv</sub> = ' + a.kvHeads + ' · 无可旋转键')
+      + '</div>' + ARROW
+      + box(s.pe === 'rope' ? 'choice' : 'off', 'Rotary Position Embedding (RoPE)', '注意力级位置编码 · ' + (s.pe === 'rope' ? '旋转 Q / K 后点积天然带相对位置' : '当前由输入级位置编码提供位置'))
+      + ARROW
+      + box('on', 'Attention Scores + Causal Mask', 'Softmax → 按 V 加权求和 → 输出投影 W_o')
+      + mlaDetail
+      + '<div class="chips">' + chips + '</div>'
+      + '<p class="note">点击标签切换注意力实现；MLA 的位置处理路径与标准 MHA / GQA 不完全相同。</p></div>'
+      + ARROW
+      + box('struct', 'Residual Connection (+)', '把 Attention 子模块的输入与输出相加')
+      + ARROW
+      + box('struct', 'Normalization · ' + (s.norm === 'rms' ? 'RMSNorm' : 'LayerNorm'), '第二个 Norm · 每层权重 ' + fmtParams(d.normUnit))
+      + ARROW
+      + '<div class="group"><div class="group-title">Feed-Forward Module <em>Dense 与 MoE 二选一 · 各层可用不同结构</em></div><div class="row2">'
+      + box(s.ffkind === 'dense' ? 'on' : 'off', 'Dense FFN · ' + (s.ffform === 'swiglu' ? 'SwiGLU' : '标准 MLP'), d.ffn.matrices + ' 个矩阵 · ' + fmtInt(s.dmodel) + '×' + fmtInt(s.dff) + ' = ' + fmtParams(d.ffn.expert) + ' / 层 · ' + (s.ffkind === 'dense' ? '使用中' : '未使用'))
+      + box(s.ffkind === 'moe' ? 'on' : 'off', 'MoE · Router Top-' + Math.min(s.topk, s.experts), 'E = ' + s.experts + ' · 单个专家 ' + fmtParams(d.ffn.expert) + ' · Router ' + fmtParams(d.ffn.router) + ' · ' + (s.ffkind === 'moe' ? '使用中' : '未使用'))
+      + (s.ffkind === 'moe' ? '<div class="experts">' + expertCells + '</div>' : '')
+      + '</div><p class="note">' + (s.ffkind === 'moe'
+        ? 'MoE 全部参数 ' + fmtParams(d.ffn.total) + '，每个 Token 只激活 ' + fmtParams(d.ffn.active) + '（示例把前 ' + d.ffn.topk + ' 个专家标为激活，实际由 Router 决定）。'
+        : '当前所有 Token 共用同一套前馈参数。若改成 E = ' + s.experts + ' 的 MoE，每层前馈会变成 ' + fmtParams(moePlan.total) + '，但每个 Token 仍只走 Top-' + moePlan.topk + '（' + fmtParams(moePlan.active) + '）。')
+        + '</p></div>'
+      + ARROW
+      + box('struct', 'Residual Connection (+)', '把前馈子模块的输入与输出相加')
+      + '</section>' + ARROW
+      + '<section class="layer"><div class="layer-title">3. Output Layer<span>Hidden States → Next Token → Text</span></div>'
+      + box('', 'Final ' + (s.norm === 'rms' ? 'RMSNorm' : 'LayerNorm') + ' → LM Head → 词表 Logits', s.embtie === 'tied' ? 'LM Head 复用输入嵌入权重 · 额外参数 0' : '独立矩阵 V×d = ' + fmtParams(d.lmHead))
+      + ARROW
+      + box('choice', 'Token Selection', 'Greedy / Temperature / Top-k / Top-p')
+      + ARROW
+      + box('on', 'Token ID → Detokenization → 生成文本', '逐 Token 生成，直到满足停止条件')
+      + '</section>';
+  }
+  function trimNum(x) { return Number.isInteger(x) ? String(x) : x.toFixed(2); }
+</script><script>
+  function fmtChart(value, kind) {
+    if (kind === 'bytes') return value >= 1024 ? fmtBytes(value * 1024) : value.toFixed(2) + ' KB';
+    return value >= 1000 ? (value / 1000).toFixed(2) + ' B' : value.toFixed(1) + ' M';
+  }
+  function chartData(s, d) {
+    const variants = [['MHA', 'mha'], ['MQA', 'mqa'], ['GQA', 'gqa'], ['MLA', 'mla']];
+    if (chartMetric !== 'ffn') {
+      const unitDiv = chartMetric === 'kv' ? 1024 : 1e6;
+      const rows = variants.map(([label, variant]) => {
+        const info = attentionOf(s, variant, s.kvheads);
+        const value = (chartMetric === 'kv' ? info.kvElements * BYTES_PER_ELEMENT : info.params) / unitDiv;
+        return { label, value, active: s.attn === variant };
+      });
+      const base = attentionOf(s, 'mha', s.heads);
+      return {
+        rows, kind: chartMetric === 'kv' ? 'bytes' : 'params',
+        base: (chartMetric === 'kv' ? base.kvElements * BYTES_PER_ELEMENT : base.params) / unitDiv,
+        note: chartMetric === 'kv'
+          ? '当前 d_model = ' + fmtInt(s.dmodel) + '、H = ' + s.heads + '、H<sub>kv</sub> = ' + d.attn.kvHeads + '、r<sub>kv</sub> = ' + Math.min(s.rkv, s.dmodel) + '。MHA 每头缓存一份 K/V，MQA / GQA 直接少存几组，MLA 只缓存压缩潜变量加每头旋转键。'
+          : '当前 d_model = ' + fmtInt(s.dmodel) + '、H = ' + s.heads + '、H<sub>kv</sub> = ' + d.attn.kvHeads + '。注意力参数只算投影矩阵：减少 K/V 头数省下的参数远少于它省下的缓存。'
+      };
+    }
+    const matrices = d.ffn.matrices;
+    const dense = (m) => m * s.dmodel * s.dff;
+    const router = s.dmodel * s.experts;
+    const rows = [
+      { label: '标准 FFN（2 矩阵）', value: dense(2) / 1e6, active: s.ffkind === 'dense' && s.ffform === 'standard' },
+      { label: 'SwiGLU（3 矩阵）', value: dense(3) / 1e6, active: s.ffkind === 'dense' && s.ffform === 'swiglu' },
+      { label: 'MoE ' + s.experts + ' 专家全部', value: (s.experts * dense(matrices) + router) / 1e6, active: s.ffkind === 'moe' },
+      { label: 'MoE 激活 Top-' + Math.min(s.topk, s.experts), value: (Math.min(s.topk, s.experts) * dense(matrices) + router) / 1e6, active: s.ffkind === 'moe' }
+    ];
+    return {
+      rows, kind: 'params', base: dense(2) / 1e6,
+      note: '前馈形式决定每层用 2 个还是 3 个矩阵（SwiGLU 在同 d_ff 下多 1/2 参数）；MoE 把参数量乘上专家数，但每个 Token 的计算量只按 Top-K 增长。当前矩阵数 ' + matrices + '、d_ff = ' + fmtInt(s.dff) + '。'
+    };
+  }
+
+  function renderChart(s, d) {
+    const data = chartData(s, d);
+    const left = 168, right = 700, top = 26, rowH = 42;
+    const barMax = right - left - 168;
+    const height = top + data.rows.length * rowH + 16;
+    const max = Math.max(...data.rows.map(r => r.value)) || 1;
+    const parts = ['<line x1="' + left + '" y1="' + (top - 8) + '" x2="' + left + '" y2="' + (height - 12) + '" stroke="#dadce0"/>'];
+    data.rows.forEach((row, i) => {
+      const y = top + i * rowH;
+      const width = Math.max(2, barMax * row.value / max);
+      parts.push('<text x="' + (left - 12) + '" y="' + (y + 19) + '" text-anchor="end" font-size="12.5" fill="' + (row.active ? '#681da8' : '#3c4043') + '" font-weight="' + (row.active ? '700' : '400') + '">' + (row.active ? '▸ ' : '') + row.label + '</text>');
+      parts.push('<rect x="' + left + '" y="' + (y + 5) + '" width="' + width.toFixed(1) + '" height="22" rx="3" fill="' + (row.active ? '#9334e6' : '#c7cad1') + '"><title>' + row.label + '：' + fmtChart(row.value, data.kind) + '</title></rect>');
+      const compare = ratio(row.value, data.base);
+      parts.push('<text x="' + (left + width + 9).toFixed(1) + '" y="' + (y + 21) + '" font-size="12.5" fill="#202124">' + fmtChart(row.value, data.kind) + (compare ? '（' + compare + '）' : '') + '</text>');
+    });
+    const svg = $('chart');
+    svg.setAttribute('viewBox', '0 0 720 ' + height);
+    svg.innerHTML = parts.join('');
+    $('chart-explain').innerHTML = data.note;
+  }
+
+  function renderMetrics(s, d) {
+    const rows = [
+      ['总参数量（估算）', fmtParams(d.total), true],
+      ['每 Token 激活参数', fmtParams(d.active), true],
+      ['嵌入 + 位置 + LM Head', fmtParams(d.embedding + d.position + d.lmHead), false],
+      ['每层注意力参数', fmtParams(d.attn.params), false],
+      ['每层前馈参数' + (d.sparse ? '（全部）' : ''), fmtParams(d.ffn.total), false],
+      ['每层前馈参数（前向激活）', fmtParams(d.ffn.active), d.sparse],
+      ['每层归一化参数', fmtParams(d.normPerLayer), false],
+      ['注意力头维 d<sub>h</sub>', trimNum(d.headDim), false],
+      ['每 Token 每层 KV 缓存', fmtBytes(d.kvPerLayer), true],
+      ['上下文 ' + fmtInt(s.ctx) + ' 的 KV 缓存', fmtBytes(d.kvTotal), true],
+      ['每 Token 前向 ≈ 2×激活参数', fmtFlops(d.flops), false]
+    ];
+    $('metrics').innerHTML = rows.map(([label, value, hi]) =>
+      '<div><dt>' + label + '</dt><dd' + (hi ? ' class="hi"' : '') + '>' + value + '</dd></div>'
+    ).join('');
+  }
+
+  function renderFormulas(s, d) {
+    const mla = s.attn === 'mla';
+    const items = [
+      ['位置编码 ' + (s.pe === 'sine' ? 'Sinusoidal' : s.pe === 'learned' ? 'Learned PE' : 'RoPE'),
+        s.pe === 'learned' ? '参数 = L×d = ' + fmtParams(d.position) : '参数 = 0（固定函数 / 旋转矩阵不学习）'],
+      ['注意力 ' + s.attn.toUpperCase(), mla
+        ? 'd·r<sub>q</sub> + r<sub>q</sub>·H·(d<sub>c</sub>+d<sub>r</sub>) + d·r<sub>kv</sub> + r<sub>kv</sub>·H·(d<sub>c</sub>+d<sub>r</sub>) + H·d<sub>c</sub>·d = ' + fmtParams(d.attn.params)
+        : '2·d·(H·d<sub>h</sub>) + 2·d·(H<sub>kv</sub>·d<sub>h</sub>) = ' + fmtParams(d.attn.params)],
+      ['前馈 ' + (s.ffkind === 'moe' ? 'MoE' : 'Dense') + ' · ' + (s.ffform === 'swiglu' ? 'SwiGLU' : '标准'),
+        s.ffkind === 'moe'
+          ? 'E·' + d.ffn.matrices + '·d·d<sub>ff</sub> + d·E = ' + fmtParams(d.ffn.total) + '（激活 ' + fmtParams(d.ffn.active) + '）'
+          : d.ffn.matrices + '·d·d<sub>ff</sub> = ' + fmtParams(d.ffn.total)],
+      ['KV 缓存 / Token / 层', mla
+        ? '(r<sub>kv</sub> + H·d<sub>r</sub>) × ' + BYTES_PER_ELEMENT + ' B = ' + fmtBytes(d.kvPerLayer)
+        : '2·H<sub>kv</sub>·d<sub>h</sub> × ' + BYTES_PER_ELEMENT + ' B = ' + fmtBytes(d.kvPerLayer)],
+      ['总参数', 'V·d + 位置 + N·(attn + ffn + 2·norm) + norm + LM Head = ' + fmtParams(d.total)],
+      ['归一化 ' + (s.norm === 'rms' ? 'RMSNorm' : 'LayerNorm'), (s.norm === 'rms' ? '每层 2×d = ' : '每层 2×2d = ') + fmtParams(d.normPerLayer)]
+    ];
+    $('formulas').innerHTML = items.map(([label, text]) => '<li><b>' + label + '：</b>' + text + '</li>').join('');
+  }
+
+  function applyVariantAvailability(s) {
+    const set = (wrap, input, enabled) => {
+      $(wrap).classList.toggle('is-na', !enabled);
+      $(input).disabled = !enabled;
+    };
+    set('wrap-kvheads', 'kvheads', s.attn === 'gqa');
+    set('wrap-rq', 'rq', s.attn === 'mla');
+    set('wrap-rkv', 'rkv', s.attn === 'mla');
+    set('wrap-experts', 'experts', s.ffkind === 'moe');
+    set('wrap-topk', 'topk', s.ffkind === 'moe');
+    const clamped = s.attn === 'gqa' && s.kvheads > s.heads;
+    $('variant-note').innerHTML = '灰显项在当前方案下不生效：H<sub>kv</sub> 仅 GQA 使用（MHA 视为 H、MQA 视为 1）；r<sub>q</sub> / r<sub>kv</sub> 仅 MLA 使用；E / Top-K 仅 MoE 使用。'
+      + (clamped ? ' 当前 H<sub>kv</sub> = ' + s.kvheads + ' 超过 H = ' + s.heads + '，估算已按 H 上限取 ' + s.heads + '。' : '');
+  }
+
+  function render() {
+    const s = state();
+    const d = derive(s);
+    for (const key of numericKeys) $(key + '-value').textContent = fmtInt(s[key]);
+    const names = {
+      pe: { sine: 'Sinusoidal PE', learned: 'Learned PE', rope: 'RoPE' },
+      attn: { mha: 'MHA', mqa: 'MQA', gqa: 'GQA', mla: 'MLA' },
+      ffkind: { dense: 'Dense FFN', moe: 'MoE Top-' + Math.min(s.topk, s.experts) },
+      norm: { ln: 'LayerNorm', rms: 'RMSNorm' }
+    };
+    $('state-line').innerHTML = ['<strong>' + names.pe[s.pe] + '</strong>', '<strong>' + names.attn[s.attn] + '</strong>',
+      '<strong>' + names.ffkind[s.ffkind] + '</strong>', '<strong>' + names.norm[s.norm] + '</strong>',
+      'N=' + s.layers + ' · d=' + fmtInt(s.dmodel) + ' · H=' + s.heads].join(' + ') + ' · 总量 ' + fmtParams(d.total);
+    applyVariantAvailability(s);
+    $('diagram').innerHTML = renderDiagram(s, d);
+    for (const chip of $('diagram').querySelectorAll('[data-attn]')) {
+      chip.addEventListener('click', () => { controls.attn.value = chip.dataset.attn; render(); });
+    }
+    renderChart(s, d);
+    renderMetrics(s, d);
+    renderFormulas(s, d);
+  }
+
+  function applyPreset(name) {
+    const preset = presets[name];
+    if (!preset) return;
+    for (const key of Object.keys(preset)) {
+      if (key === 'note') continue;
+      if (controls[key]) controls[key].value = preset[key];
+    }
+    basePreset = name;
+    presetSelect.value = name;
+    $('preset-note').innerHTML = preset.note;
+    render();
+  }
+
+  let basePreset = 'llama3';
+  const presetSelect = $('preset');
+  presetSelect.addEventListener('change', () => {
+    if (presetSelect.value === 'custom') { basePreset = 'custom'; $('preset-note').textContent = '自定义配置：所有数值都来自当前控件。'; return; }
+    applyPreset(presetSelect.value);
+  });
+  $('reset').addEventListener('click', () => {
+    if (!presets[basePreset]) { presetSelect.value = 'llama3'; applyPreset('llama3'); return; }
+    presetSelect.value = basePreset;
+    applyPreset(basePreset);
+  });
+  for (const key of Object.keys(controls)) {
+    if (key === 'preset') continue;
+    controls[key].addEventListener('input', () => {
+      if (basePreset !== 'custom') {
+        basePreset = 'custom';
+        presetSelect.value = 'custom';
+        $('preset-note').innerHTML = '已偏离预设，数值来自当前控件。点击“恢复预设值”可回到上一次选择的预设。';
+      }
+      render();
+    });
+  }
+  const metricButtons = { kv: $('metric-kv'), attn: $('metric-attn'), ffn: $('metric-ffn') };
+  for (const [name, button] of Object.entries(metricButtons)) {
+    button.addEventListener('click', () => {
+      chartMetric = name;
+      for (const [other, otherButton] of Object.entries(metricButtons)) {
+        const active = other === name;
+        otherButton.setAttribute('aria-pressed', String(active));
+      }
+      render();
+    });
+  }
+  applyPreset('llama3');
+</script>
+</body>
+</html>

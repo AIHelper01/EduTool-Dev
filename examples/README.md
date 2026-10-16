@@ -15,6 +15,7 @@ These tools also validate the extraction and generation flow of the skill. Every
 | `quantization` | New | Bit width, scale, zero point, group scaling, error and weight storage estimates |
 | `lora` | New | Frozen weights, low-rank matrices, gradient training, parameter counts, merge consistency |
 | `rnn-lstm` | New | Time steps, gates, state passing, early-input sensitivity |
+| `llm-architecture-explorer` | New | Positional encoding, attention variant, feed-forward kind and norm choices driving the diagram, parameter counts and KV-cache estimates |
 | `object-detection-dataset-viewer` | New unified entry | Offline links to the three formats, language switching, narrow-screen layout |
 | `yolo-dataset-viewer` | Extracted | Local file loading, detection box coordinates, zoom, dragging, offline run |
 | `coco-dataset-viewer` | Extracted | File name to Image ID matching, category names, detection boxes, JSON tree |
